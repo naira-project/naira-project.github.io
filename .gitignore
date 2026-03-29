@@ -1,0 +1,12 @@
+/node_modules/
+/.vitepress/cache/
+/.vitepress/dist/
+public/.DS_Store
+.DS_Store
+CLAUDE.md
+.claude/
+test-deploy/
+.idea/
+.claude
+CLAUDE.local.md
+.DS_Store
