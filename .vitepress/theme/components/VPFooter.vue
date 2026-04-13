@@ -32,7 +32,7 @@ import { withBase, useData } from "vitepress";
 
 const { hasSidebar } = useSidebar()
 const { isDark, title } = useData()
-const projectName = title || 'PlatformMesh'
+const projectName = title || 'OpenMFP'
 
 </script>
 
@@ -53,16 +53,7 @@ const projectName = title || 'PlatformMesh'
           <p>
             The views and opinions expressed are solely those of the author(s) and do not necessarily reflect the views of the European Union or the European Commission. Neither the European Union nor the European Commission can be held responsible for them.
           </p>
-          <div class="copyright">
-            <p>
-              <strong>
-                Copyright © Linux Foundation Europe.
-              </strong>
-            </p>
-            
-            For applicable policies including privacy policy, terms of use and trademark usage guidelines, please see <a href="https://linuxfoundation.eu">https://linuxfoundation.eu</a>.
-            Linux is a registered trademark of Linus Torvalds.
-          </div>
+         
         </div>
 
       </div>
@@ -227,5 +218,33 @@ const projectName = title || 'PlatformMesh'
 .footer-legal-sep {
   margin: 0 4px;
   color: var(--vp-c-divider);
+}
+
+/* Neonephos Logo Section */
+.neonephos-logos {
+  margin: 24px 0;
+  text-align: center;
+}
+
+.neonephos-logo {
+  max-height: 60px;
+  height: auto;
+  display: block;
+  margin: 0 auto;
+}
+
+.neonephos-link {
+  display: inline-block;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .footer-columns {
+    justify-content: flex-start;
+  }
+
+  .neonephos-logo {
+    max-height: 50px;
+  }
 }
 </style>

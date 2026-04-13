@@ -2,47 +2,89 @@ import {
   __commonJS
 } from "./chunk-BUSYA2B4.js";
 
+// node_modules/@braintree/sanitize-url/dist/constants.js
+var require_constants = __commonJS({
+  "node_modules/@braintree/sanitize-url/dist/constants.js"(exports) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    exports.BLANK_URL = exports.relativeFirstCharacters = exports.whitespaceEscapeCharsRegex = exports.urlSchemeRegex = exports.ctrlCharactersRegex = exports.htmlCtrlEntityRegex = exports.htmlEntitiesRegex = exports.invalidProtocolRegex = void 0;
+    exports.invalidProtocolRegex = /^([^\w]*)(javascript|data|vbscript)/im;
+    exports.htmlEntitiesRegex = /&#(\w+)(^\w|;)?/g;
+    exports.htmlCtrlEntityRegex = /&(newline|tab);/gi;
+    exports.ctrlCharactersRegex = /[\u0000-\u001F\u007F-\u009F\u2000-\u200D\uFEFF]/gim;
+    exports.urlSchemeRegex = /^.+(:|&colon;)/gim;
+    exports.whitespaceEscapeCharsRegex = /(\\|%5[cC])((%(6[eE]|72|74))|[nrt])/g;
+    exports.relativeFirstCharacters = [".", "/"];
+    exports.BLANK_URL = "about:blank";
+  }
+});
+
 // node_modules/@braintree/sanitize-url/dist/index.js
 var require_dist = __commonJS({
   "node_modules/@braintree/sanitize-url/dist/index.js"(exports) {
     Object.defineProperty(exports, "__esModule", { value: true });
-    exports.sanitizeUrl = exports.BLANK_URL = void 0;
-    var invalidProtocolRegex = /^([^\w]*)(javascript|data|vbscript)/im;
-    var htmlEntitiesRegex = /&#(\w+)(^\w|;)?/g;
-    var htmlCtrlEntityRegex = /&(newline|tab);/gi;
-    var ctrlCharactersRegex = /[\u0000-\u001F\u007F-\u009F\u2000-\u200D\uFEFF]/gim;
-    var urlSchemeRegex = /^.+(:|&colon;)/gim;
-    var relativeFirstCharacters = [".", "/"];
-    exports.BLANK_URL = "about:blank";
+    exports.sanitizeUrl = void 0;
+    var constants_1 = require_constants();
     function isRelativeUrlWithoutProtocol(url) {
-      return relativeFirstCharacters.indexOf(url[0]) > -1;
+      return constants_1.relativeFirstCharacters.indexOf(url[0]) > -1;
     }
     function decodeHtmlCharacters(str) {
-      var removedNullByte = str.replace(ctrlCharactersRegex, "");
-      return removedNullByte.replace(htmlEntitiesRegex, function(match, dec) {
+      var removedNullByte = str.replace(constants_1.ctrlCharactersRegex, "");
+      return removedNullByte.replace(constants_1.htmlEntitiesRegex, function(match, dec) {
         return String.fromCharCode(dec);
       });
     }
+    function isValidUrl(url) {
+      return URL.canParse(url);
+    }
+    function decodeURI(uri) {
+      try {
+        return decodeURIComponent(uri);
+      } catch (e) {
+        return uri;
+      }
+    }
     function sanitizeUrl(url) {
       if (!url) {
-        return exports.BLANK_URL;
+        return constants_1.BLANK_URL;
       }
-      var sanitizedUrl = decodeHtmlCharacters(url).replace(htmlCtrlEntityRegex, "").replace(ctrlCharactersRegex, "").trim();
+      var charsToDecode;
+      var decodedUrl = decodeURI(url.trim());
+      do {
+        decodedUrl = decodeHtmlCharacters(decodedUrl).replace(constants_1.htmlCtrlEntityRegex, "").replace(constants_1.ctrlCharactersRegex, "").replace(constants_1.whitespaceEscapeCharsRegex, "").trim();
+        decodedUrl = decodeURI(decodedUrl);
+        charsToDecode = decodedUrl.match(constants_1.ctrlCharactersRegex) || decodedUrl.match(constants_1.htmlEntitiesRegex) || decodedUrl.match(constants_1.htmlCtrlEntityRegex) || decodedUrl.match(constants_1.whitespaceEscapeCharsRegex);
+      } while (charsToDecode && charsToDecode.length > 0);
+      var sanitizedUrl = decodedUrl;
       if (!sanitizedUrl) {
-        return exports.BLANK_URL;
+        return constants_1.BLANK_URL;
       }
       if (isRelativeUrlWithoutProtocol(sanitizedUrl)) {
         return sanitizedUrl;
       }
-      var urlSchemeParseResults = sanitizedUrl.match(urlSchemeRegex);
+      var trimmedUrl = sanitizedUrl.trimStart();
+      var urlSchemeParseResults = trimmedUrl.match(constants_1.urlSchemeRegex);
       if (!urlSchemeParseResults) {
         return sanitizedUrl;
       }
-      var urlScheme = urlSchemeParseResults[0];
-      if (invalidProtocolRegex.test(urlScheme)) {
-        return exports.BLANK_URL;
+      var urlScheme = urlSchemeParseResults[0].toLowerCase().trim();
+      if (constants_1.invalidProtocolRegex.test(urlScheme)) {
+        return constants_1.BLANK_URL;
       }
-      return sanitizedUrl;
+      var backSanitized = trimmedUrl.replace(/\\/g, "/");
+      if (urlScheme === "mailto:" || urlScheme.includes("://")) {
+        return backSanitized;
+      }
+      if (urlScheme === "http:" || urlScheme === "https:") {
+        if (!isValidUrl(backSanitized)) {
+          return constants_1.BLANK_URL;
+        }
+        var url_1 = new URL(backSanitized);
+        url_1.protocol = url_1.protocol.toLowerCase();
+        url_1.hostname = url_1.hostname.toLowerCase();
+        return url_1.toString();
+      }
+      return backSanitized;
     }
     exports.sanitizeUrl = sanitizeUrl;
   }

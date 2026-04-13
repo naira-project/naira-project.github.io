@@ -4,22 +4,33 @@ layout: home
 
 hero:
   name: "Naira"
-  text: "The Internal Development Platform for AI Engineers."
-  tagline: My great project tagline
+  text: "The AI Engineering Development Platform"
+  tagline: "An open source internal development platform to enable organizations building AI first platforms"
+  image:
+    src: '/logo.png'
+    alt: 'Naira'
   actions:
     - theme: brand
-      text: Markdown Examples
-      link: /markdown-examples
+      text: Get Started
+      link: /documentation/
     - theme: alt
-      text: API Examples
-      link: /api-examples
+      text: GitHub
+      link: https://github.com/naira-project
 
 features:
-  - title: Feature A
-    details: Lorem ipsum dolor sit amet, consectetur adipiscing elit
-  - title: Feature B
-    details: Lorem ipsum dolor sit amet, consectetur adipiscing elit
-  - title: Feature C
-    details: Lorem ipsum dolor sit amet, consectetur adipiscing elit
+  - title: Discover and manage AI assets
+    details: One place to find them all, connected and set in context, from the model to the application.
+    link: /documentation/
+  - title: Build AI-native Environments
+    details: For platform engineers that face the challenge of build environments for AI and regular workload, to effectively handle the diverse workload and provide a holistic view of the systems.
+    link: /documentation/
+  - title: Accelerate delivery
+    details: Supporting a streamlined and fast delivery of AI projects by golden paths, reuseable templates and an open adjustable ecosystem.
+    link: /documentation/
+  - title: AI Engineering and Developer Experience
+    details: An intuitive, developer-friendly environment designed to make building AI-enabled systems faster, smoother, and more enjoyable.
+    link: /documentation/
+    
+
 ---
 

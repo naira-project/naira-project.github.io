@@ -8,7 +8,6 @@ on:
   pull_request:
     branches:
       - main
-      - 'release-*'
     types:
       - opened
       - reopened
@@ -39,22 +38,20 @@ jobs:
           cache: npm
 
       - id: configure
-        uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6
+        uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5
 
       # Extract version from branch name for versioned deployments
       - id: set-version
         name: Set documentation version
         run: |
-          if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
-            echo "version=main" >> $GITHUB_OUTPUT
-          elif [[ "${{ github.ref }}" == refs/heads/release-* ]]; then
+          if [[ "${{ github.ref }}" == refs/heads/release-* ]]; then
             echo "version=${GITHUB_REF#refs/heads/}" >> $GITHUB_OUTPUT
           else
             echo "version=" >> $GITHUB_OUTPUT
           fi
 
       - run: npm ci
-      - run: npm run docs:build
+      - run: npm run build
         env:
           DOCS_VERSION: ${{ steps.set-version.outputs.version }}
           PAGES_BASE: ${{ github.event_name == 'pull_request' && format('pr-preview/pr-{0}', github.event.pull_request.number) || '' }}
@@ -65,37 +62,12 @@ jobs:
         with:
           source-dir: .vitepress/dist
 
-      # Deploy versioned docs to GitHub Pages
-      # This creates a folder structure on gh-pages branch for each version:
-      #   gh-pages/
-      #   ├── index.html      ← root redirect (deployed from main branch)
-      #   ├── main/           ← from main branch
-      #   ├── release-0.2/    ← from release-0.2 branch
-      #   └── pr-preview/     ← PR previews (preserved via clean-exclude)
-      #
-      # Each version is independent - deploying main/ won't affect release-0.2/
-      # The target-folder determines which subdirectory receives the build output
+      # deploy the build to GitHub Pages
       - uses: JamesIves/github-pages-deploy-action@d92aa235d04922e8f08b40ce78cc5442fcfbfa2f # v4
-        if: ${{ (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/release-')) }}
+        if: ${{ (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main' }}
         with:
           folder: .vitepress/dist
           branch: gh-pages
           target-folder: ${{ steps.set-version.outputs.version }}
           clean-exclude: pr-preview
           force: false
-
-      # Deploy root index.html redirect from main branch only
-      # This ensures the site root redirects to the default version (release-0.2)
-      - uses: JamesIves/github-pages-deploy-action@d92aa235d04922e8f08b40ce78cc5442fcfbfa2f # v4
-        if: ${{ (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main' }}
-        with:
-          folder: .
-          branch: gh-pages
-          target-folder: .
-          clean: false
-          clean-exclude: |
-            pr-preview
-            main
-            release-*
-          force: false
-          include: index.html
