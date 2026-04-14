@@ -913,7 +913,7 @@ var pnow = performance$1 && performance$1.now ? function() {
 } : function() {
   return Date.now();
 };
-var raf = function() {
+var raf = (function() {
   if (_window) {
     if (_window.requestAnimationFrame) {
       return function(fn3) {
@@ -940,7 +940,7 @@ var raf = function() {
       }, 1e3 / 60);
     }
   };
-}();
+})();
 var requestAnimationFrame = function requestAnimationFrame2(fn3) {
   return raf(fn3);
 };
@@ -1176,7 +1176,7 @@ var setPrefixedProperty = function setPrefixedProperty2(obj, propName, prefix, v
   }
   obj[propName] = value;
 };
-var ObjectMap = function() {
+var ObjectMap = (function() {
   function ObjectMap2() {
     _classCallCheck(this, ObjectMap2);
     this._obj = {};
@@ -1209,10 +1209,10 @@ var ObjectMap = function() {
       return this._obj[key];
     }
   }]);
-}();
+})();
 var Map$1 = typeof Map !== "undefined" ? Map : ObjectMap;
 var undef = "undefined";
-var ObjectSet = function() {
+var ObjectSet = (function() {
   function ObjectSet2(arrayOrObjectSet) {
     _classCallCheck(this, ObjectSet2);
     this._obj = /* @__PURE__ */ Object.create(null);
@@ -1276,7 +1276,7 @@ var ObjectSet = function() {
       return this.toArray().forEach(callback, thisArg);
     }
   }]);
-}();
+})();
 var Set$1 = (typeof Set === "undefined" ? "undefined" : _typeof(Set)) !== undef ? Set : ObjectSet;
 var Element = function Element2(cy, params) {
   var restore = arguments.length > 2 && arguments[2] !== void 0 ? arguments[2] : true;
@@ -1743,7 +1743,7 @@ function requireHeap$1() {
         array3[pos] = newitem;
         return _siftdown(array3, startpos, pos, cmp);
       };
-      Heap2 = function() {
+      Heap2 = (function() {
         Heap3.push = heappush;
         Heap3.pop = heappop;
         Heap3.replace = heapreplace;
@@ -1804,7 +1804,7 @@ function requireHeap$1() {
         Heap3.prototype.has = Heap3.prototype.contains;
         Heap3.prototype.copy = Heap3.prototype.clone;
         return Heap3;
-      }();
+      })();
       (function(root, factory) {
         {
           return module.exports = factory();
@@ -5966,10 +5966,10 @@ function require_isMasked() {
   if (hasRequired_isMasked) return _isMasked;
   hasRequired_isMasked = 1;
   var coreJsData = require_coreJsData();
-  var maskSrcKey = function() {
+  var maskSrcKey = (function() {
     var uid = /[^.]+$/.exec(coreJsData && coreJsData.keys && coreJsData.keys.IE_PROTO || "");
     return uid ? "Symbol(src)_1." + uid : "";
-  }();
+  })();
   function isMasked(func) {
     return !!maskSrcKey && maskSrcKey in func;
   }
@@ -6602,14 +6602,14 @@ function require_defineProperty() {
   if (hasRequired_defineProperty) return _defineProperty;
   hasRequired_defineProperty = 1;
   var getNative = require_getNative();
-  var defineProperty = function() {
+  var defineProperty = (function() {
     try {
       var func = getNative(Object, "defineProperty");
       func({}, "", {});
       return func;
     } catch (e) {
     }
-  }();
+  })();
   _defineProperty = defineProperty;
   return _defineProperty;
 }
@@ -7288,7 +7288,7 @@ var stateSelectors = [{
 }].sort(function(a, b) {
   return descending(a.selector, b.selector);
 });
-var lookup = function() {
+var lookup = (function() {
   var selToFn = {};
   var s;
   for (var i = 0; i < stateSelectors.length; i++) {
@@ -7296,7 +7296,7 @@ var lookup = function() {
     selToFn[s.selector] = s.matches;
   }
   return selToFn;
-}();
+})();
 var stateSelectorMatches = function stateSelectorMatches2(sel, ele) {
   return lookup[sel](ele);
 };
@@ -9108,8 +9108,11 @@ var updateBoundsFromMiter = function updateBoundsFromMiter2(bounds2, ele, opacit
     return;
   }
   var cy = ele.cy();
-  var shape = ele.pstyle("shape").value;
-  var rshape = cy.renderer().nodeShapes[shape];
+  var r = cy.renderer();
+  var rshape = r.nodeShapes[r.getNodeShape(ele)];
+  if (!rshape) {
+    return;
+  }
   var _ele$position = ele.position(), x2 = _ele$position.x, y2 = _ele$position.y;
   var w = ele.width();
   var h = ele.height();
@@ -11879,7 +11882,7 @@ elesfn$1.restore = function() {
           error("Can not create edge `" + id2 + "` with unspecified " + field);
           badSourceOrTarget = true;
         } else if (!cy.hasElementWithId(val)) {
-          error("Can not create edge `" + id2 + "` with nonexistant " + field + " `" + val + "`");
+          error("Can not create edge `" + id2 + "` with nonexistent " + field + " `" + val + "`");
           badSourceOrTarget = true;
         }
       }
@@ -12311,7 +12314,7 @@ function generateCubicBezier(mX1, mY1, mX2, mY2) {
   };
   return f;
 }
-var generateSpringRK4 = /* @__PURE__ */ function() {
+var generateSpringRK4 = /* @__PURE__ */ (function() {
   function springAccelerationForState(state) {
     return -state.tension * state.x - state.friction * state.v;
   }
@@ -12367,7 +12370,7 @@ var generateSpringRK4 = /* @__PURE__ */ function() {
       return path[percentComplete * (path.length - 1) | 0];
     };
   };
-}();
+})();
 var cubicBezier = function cubicBezier2(t1, p1, t2, p2) {
   var bezier = generateCubicBezier(t1, p1, t2, p2);
   return function(start, end, percent) {
@@ -13425,6 +13428,7 @@ styfn$8.applyParsedProperty = function(ele, parsedProp) {
     warn("Do not assign mappings to elements without corresponding data (i.e. ele `" + ele.id() + "` has no mapping for property `" + prop.name + "` with data field `" + prop.field + "`); try a `[" + prop.field + "]` selector to limit scope to elements with `" + prop.field + "` defined");
   };
   switch (prop.mapped) {
+    // flatten the property if mapped
     case types.mapData: {
       var fields = prop.field.split(".");
       var fieldVal = _p.data;
@@ -13485,6 +13489,7 @@ styfn$8.applyParsedProperty = function(ele, parsedProp) {
       prop = flatProp;
       break;
     }
+    // direct mapping
     case types.data: {
       var _fields = prop.field.split(".");
       var _fieldVal = _p.data;
@@ -13522,6 +13527,7 @@ styfn$8.applyParsedProperty = function(ele, parsedProp) {
     }
     case void 0:
       break;
+    // just set the property
     default:
       return false;
   }
@@ -16504,7 +16510,7 @@ var corefn$1 = {
     var _p = this._private;
     var container2 = _p.container;
     var cy = this;
-    return _p.sizeCache = _p.sizeCache || (container2 ? function() {
+    return _p.sizeCache = _p.sizeCache || (container2 ? (function() {
       var style3 = cy.window().getComputedStyle(container2);
       var val = function val2(name) {
         return parseFloat(style3.getPropertyValue(name));
@@ -16513,7 +16519,7 @@ var corefn$1 = {
         width: container2.clientWidth - val("padding-left") - val("padding-right"),
         height: container2.clientHeight - val("padding-top") - val("padding-bottom")
       };
-    }() : {
+    })() : {
       // fallback if no container (not 0 b/c can be used for dividing etc)
       width: 1,
       height: 1
@@ -17281,12 +17287,12 @@ BreadthFirstLayout.prototype.run = function() {
     y: bb.y1 + bb.h / 2
   };
   var aveNodeSize = nodes3.reduce(function(acc, node) {
-    return function(box) {
+    return (function(box) {
       return {
         w: acc.w === -1 ? box.w : (acc.w + box.w) / 2,
         h: acc.h === -1 ? box.h : (acc.h + box.h) / 2
       };
-    }(node.boundingBox({
+    })(node.boundingBox({
       includeLabels: options2.nodeDimensionsIncludeLabels
     }));
   }, {
@@ -23902,7 +23908,7 @@ var defs = {
     };
   }
 };
-var ElementTextureCacheLookup = function() {
+var ElementTextureCacheLookup = (function() {
   function ElementTextureCacheLookup2(getKey3) {
     var doesEleInvalidateKey = arguments.length > 1 && arguments[1] !== void 0 ? arguments[1] : falsify;
     _classCallCheck(this, ElementTextureCacheLookup2);
@@ -24072,7 +24078,7 @@ var ElementTextureCacheLookup = function() {
       return entireKeyInvalidated || this.getNumberOfIdsForKey(key) === 0;
     }
   }]);
-}();
+})();
 var minTxrH = 25;
 var txrStepH = 50;
 var minLvl$1 = -4;
@@ -26504,6 +26510,7 @@ CRp$6.drawStripe = function(context, node, nodeOpacity, pos) {
   switch (direction) {
     case "vertical":
       break;
+    // default
     case "righward":
       context.rotate(-Math.PI / 2);
       break;
@@ -27125,13 +27132,17 @@ function modelToRenderedPosition2(r, pan2, zoom2, x2, y2) {
   ry = Math.round(r.canvasHeight - ry);
   return [rx, ry];
 }
-function isSimpleShape(node) {
-  if (node.pstyle("background-fill").value !== "solid") return false;
-  if (node.pstyle("background-image").strValue !== "none") return false;
-  if (node.pstyle("border-width").value === 0) return true;
-  if (node.pstyle("border-opacity").value === 0) return true;
-  if (node.pstyle("border-style").value !== "solid") return false;
-  return true;
+function isSimpleShape(node, renderTarget) {
+  if (renderTarget.picking) {
+    return true;
+  } else {
+    if (node.pstyle("background-fill").value !== "solid") return false;
+    if (node.pstyle("background-image").strValue !== "none") return false;
+    if (node.pstyle("border-width").value === 0) return true;
+    if (node.pstyle("border-opacity").value === 0) return true;
+    if (node.pstyle("border-style").value !== "solid") return false;
+    return true;
+  }
 }
 function arrayEqual(a1, a2) {
   if (a1.length !== a2.length) {
@@ -27422,7 +27433,7 @@ function projection(out, width2, height2) {
   out[8] = 1;
   return out;
 }
-var Atlas = function() {
+var Atlas = (function() {
   function Atlas2(r, texSize, texRows, createTextureCanvas2) {
     _classCallCheck(this, Atlas2);
     this.debugID = Math.floor(Math.random() * 1e4);
@@ -27622,8 +27633,8 @@ var Atlas = function() {
       this.locked = true;
     }
   }]);
-}();
-var AtlasCollection = function() {
+})();
+var AtlasCollection = (function() {
   function AtlasCollection2(r, texSize, texRows, createTextureCanvas2) {
     _classCallCheck(this, AtlasCollection2);
     this.r = r;
@@ -27797,14 +27808,14 @@ var AtlasCollection = function() {
       };
     }
   }]);
-}();
+})();
 function intersection(set1, set2) {
   if (set1.intersection) return set1.intersection(set2);
   else return new Set(_toConsumableArray(set1).filter(function(x2) {
     return set2.has(x2);
   }));
 }
-var AtlasManager = function() {
+var AtlasManager = (function() {
   function AtlasManager2(r, globalOptions) {
     _classCallCheck(this, AtlasManager2);
     this.r = r;
@@ -28030,8 +28041,8 @@ var AtlasManager = function() {
       return debugInfo;
     }
   }]);
-}();
-var AtlasBatchManager = function() {
+})();
+var AtlasBatchManager = (function() {
   function AtlasBatchManager2(globalOptions) {
     _classCallCheck(this, AtlasBatchManager2);
     this.globalOptions = globalOptions;
@@ -28095,7 +28106,7 @@ var AtlasBatchManager = function() {
       return atlasID;
     }
   }]);
-}();
+})();
 var circleSD = "\n  float circleSD(vec2 p, float r) {\n    return distance(vec2(0), p) - r; // signed distance\n  }\n";
 var rectangleSD = "\n  float rectangleSD(vec2 p, vec2 b) {\n    vec2 d = abs(p)-b;\n    return distance(vec2(0),max(d,0.0)) + min(max(d.x,d.y),0.0);\n  }\n";
 var roundRectangleSD = "\n  float roundRectangleSD(vec2 p, vec2 b, vec4 cr) {\n    cr.xy = (p.x > 0.0) ? cr.xy : cr.zw;\n    cr.x  = (p.y > 0.0) ? cr.x  : cr.y;\n    vec2 q = abs(p) - b + cr.x;\n    return min(max(q.x, q.y), 0.0) + distance(vec2(0), max(q, 0.0)) - cr.x;\n  }\n";
@@ -28125,7 +28136,7 @@ var RECTANGLE = 4;
 var ROUND_RECTANGLE = 5;
 var BOTTOM_ROUND_RECTANGLE = 6;
 var ELLIPSE = 7;
-var ElementDrawingWebGL = function() {
+var ElementDrawingWebGL = (function() {
   function ElementDrawingWebGL2(r, gl, opts) {
     _classCallCheck(this, ElementDrawingWebGL2);
     this.r = r;
@@ -28506,7 +28517,7 @@ var ElementDrawingWebGL = function() {
       }
       var props = opts.shapeProps;
       var vertType = this._getVertTypeForShape(node, props.shape);
-      if (vertType === void 0 || opts.isSimple && !opts.isSimple(node)) {
+      if (vertType === void 0 || opts.isSimple && !opts.isSimple(node, this.renderTarget)) {
         this.drawTexture(node, eleIndex, type);
         return;
       }
@@ -28527,8 +28538,8 @@ var ElementDrawingWebGL = function() {
       }
       var indexView = this.indexBuffer.getView(instance);
       indexToVec4(eleIndex, indexView);
+      var opacity = this.renderTarget.picking ? 1 : node.pstyle(props.opacity).value;
       var color = node.pstyle(props.color).value;
-      var opacity = node.pstyle(props.opacity).value;
       var colorView = this.colorBuffer.getView(instance);
       toWebGLColor(color, opacity, colorView);
       var lineWidthView = this.lineWidthBuffer.getView(instance);
@@ -28856,7 +28867,7 @@ var ElementDrawingWebGL = function() {
       };
     }
   }]);
-}();
+})();
 var CRp$4 = {};
 CRp$4.initWebgl = function(opts, fns) {
   var r = this;
@@ -30232,7 +30243,7 @@ sheetfn.appendToStyle = function(style3) {
   }
   return style3;
 };
-var version = "3.33.1";
+var version = "3.33.2";
 var cytoscape = function cytoscape2(options2) {
   if (options2 === void 0) {
     options2 = {};

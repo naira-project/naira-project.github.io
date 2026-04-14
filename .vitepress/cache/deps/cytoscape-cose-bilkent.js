@@ -17,7 +17,7 @@ var require_layout_base = __commonJS({
     })(exports, function() {
       return (
         /******/
-        function(modules) {
+        (function(modules) {
           var installedModules = {};
           function __webpack_require__(moduleId) {
             if (installedModules[moduleId]) {
@@ -74,10 +74,10 @@ var require_layout_base = __commonJS({
           };
           __webpack_require__.p = "";
           return __webpack_require__(__webpack_require__.s = 26);
-        }([
+        })([
           /* 0 */
           /***/
-          function(module2, exports2, __webpack_require__) {
+          (function(module2, exports2, __webpack_require__) {
             "use strict";
             function LayoutConstants() {
             }
@@ -99,10 +99,10 @@ var require_layout_base = __commonJS({
             LayoutConstants.WORLD_CENTER_X = 1200;
             LayoutConstants.WORLD_CENTER_Y = 900;
             module2.exports = LayoutConstants;
-          },
+          }),
           /* 1 */
           /***/
-          function(module2, exports2, __webpack_require__) {
+          (function(module2, exports2, __webpack_require__) {
             "use strict";
             var LGraphObject = __webpack_require__(2);
             var IGeometry = __webpack_require__(8);
@@ -196,19 +196,19 @@ var require_layout_base = __commonJS({
               this.length = Math.sqrt(this.lengthX * this.lengthX + this.lengthY * this.lengthY);
             };
             module2.exports = LEdge;
-          },
+          }),
           /* 2 */
           /***/
-          function(module2, exports2, __webpack_require__) {
+          (function(module2, exports2, __webpack_require__) {
             "use strict";
             function LGraphObject(vGraphObject) {
               this.vGraphObject = vGraphObject;
             }
             module2.exports = LGraphObject;
-          },
+          }),
           /* 3 */
           /***/
-          function(module2, exports2, __webpack_require__) {
+          (function(module2, exports2, __webpack_require__) {
             "use strict";
             var LGraphObject = __webpack_require__(2);
             var Integer = __webpack_require__(10);
@@ -466,10 +466,10 @@ var require_layout_base = __commonJS({
               return this.owner.getParent();
             };
             module2.exports = LNode;
-          },
+          }),
           /* 4 */
           /***/
-          function(module2, exports2, __webpack_require__) {
+          (function(module2, exports2, __webpack_require__) {
             "use strict";
             function PointD(x, y) {
               if (x == null && y == null) {
@@ -504,10 +504,10 @@ var require_layout_base = __commonJS({
               return this;
             };
             module2.exports = PointD;
-          },
+          }),
           /* 5 */
           /***/
-          function(module2, exports2, __webpack_require__) {
+          (function(module2, exports2, __webpack_require__) {
             "use strict";
             var LGraphObject = __webpack_require__(2);
             var Integer = __webpack_require__(10);
@@ -840,10 +840,10 @@ var require_layout_base = __commonJS({
               }
             };
             module2.exports = LGraph;
-          },
+          }),
           /* 6 */
           /***/
-          function(module2, exports2, __webpack_require__) {
+          (function(module2, exports2, __webpack_require__) {
             "use strict";
             var LGraph;
             var LEdge = __webpack_require__(1);
@@ -1178,10 +1178,10 @@ var require_layout_base = __commonJS({
               return false;
             };
             module2.exports = LGraphManager;
-          },
+          }),
           /* 7 */
           /***/
-          function(module2, exports2, __webpack_require__) {
+          (function(module2, exports2, __webpack_require__) {
             "use strict";
             var LayoutConstants = __webpack_require__(0);
             function FDLayoutConstants() {
@@ -1211,10 +1211,10 @@ var require_layout_base = __commonJS({
             FDLayoutConstants.MIN_EDGE_LENGTH = 1;
             FDLayoutConstants.GRID_CALCULATION_CHECK_PERIOD = 10;
             module2.exports = FDLayoutConstants;
-          },
+          }),
           /* 8 */
           /***/
-          function(module2, exports2, __webpack_require__) {
+          (function(module2, exports2, __webpack_require__) {
             "use strict";
             var Point2 = __webpack_require__(12);
             function IGeometry() {
@@ -1529,10 +1529,10 @@ var require_layout_base = __commonJS({
             IGeometry.TWO_PI = 2 * Math.PI;
             IGeometry.THREE_PI = 3 * Math.PI;
             module2.exports = IGeometry;
-          },
+          }),
           /* 9 */
           /***/
-          function(module2, exports2, __webpack_require__) {
+          (function(module2, exports2, __webpack_require__) {
             "use strict";
             function IMath() {
             }
@@ -1552,22 +1552,22 @@ var require_layout_base = __commonJS({
               return value < 0 ? Math.floor(value) : Math.ceil(value);
             };
             module2.exports = IMath;
-          },
+          }),
           /* 10 */
           /***/
-          function(module2, exports2, __webpack_require__) {
+          (function(module2, exports2, __webpack_require__) {
             "use strict";
             function Integer() {
             }
             Integer.MAX_VALUE = 2147483647;
             Integer.MIN_VALUE = -2147483648;
             module2.exports = Integer;
-          },
+          }),
           /* 11 */
           /***/
-          function(module2, exports2, __webpack_require__) {
+          (function(module2, exports2, __webpack_require__) {
             "use strict";
-            var _createClass = /* @__PURE__ */ function() {
+            var _createClass = /* @__PURE__ */ (function() {
               function defineProperties(target, props) {
                 for (var i = 0; i < props.length; i++) {
                   var descriptor = props[i];
@@ -1582,7 +1582,7 @@ var require_layout_base = __commonJS({
                 if (staticProps) defineProperties(Constructor, staticProps);
                 return Constructor;
               };
-            }();
+            })();
             function _classCallCheck(instance2, Constructor) {
               if (!(instance2 instanceof Constructor)) {
                 throw new TypeError("Cannot call a class as a function");
@@ -1623,7 +1623,7 @@ var require_layout_base = __commonJS({
               list.length--;
               return node;
             };
-            var LinkedList = function() {
+            var LinkedList = (function() {
               function LinkedList2(vals) {
                 var _this = this;
                 _classCallCheck(this, LinkedList2);
@@ -1724,12 +1724,12 @@ var require_layout_base = __commonJS({
                 }
               }]);
               return LinkedList2;
-            }();
+            })();
             module2.exports = LinkedList;
-          },
+          }),
           /* 12 */
           /***/
-          function(module2, exports2, __webpack_require__) {
+          (function(module2, exports2, __webpack_require__) {
             "use strict";
             function Point2(x, y, p) {
               this.x = null;
@@ -1787,10 +1787,10 @@ var require_layout_base = __commonJS({
               return new Point2().constructor.name + "[x=" + this.x + ",y=" + this.y + "]";
             };
             module2.exports = Point2;
-          },
+          }),
           /* 13 */
           /***/
-          function(module2, exports2, __webpack_require__) {
+          (function(module2, exports2, __webpack_require__) {
             "use strict";
             function RectangleD(x, y, width, height) {
               this.x = 0;
@@ -1874,10 +1874,10 @@ var require_layout_base = __commonJS({
               return this.height / 2;
             };
             module2.exports = RectangleD;
-          },
+          }),
           /* 14 */
           /***/
-          function(module2, exports2, __webpack_require__) {
+          (function(module2, exports2, __webpack_require__) {
             "use strict";
             var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function(obj) {
               return typeof obj;
@@ -1907,10 +1907,10 @@ var require_layout_base = __commonJS({
               return arg == null || type != "object" && type != "function";
             };
             module2.exports = UniqueIDGeneretor;
-          },
+          }),
           /* 15 */
           /***/
-          function(module2, exports2, __webpack_require__) {
+          (function(module2, exports2, __webpack_require__) {
             "use strict";
             function _toConsumableArray(arr) {
               if (Array.isArray(arr)) {
@@ -2292,10 +2292,10 @@ var require_layout_base = __commonJS({
               this.graphManager = gm;
             };
             module2.exports = Layout2;
-          },
+          }),
           /* 16 */
           /***/
-          function(module2, exports2, __webpack_require__) {
+          (function(module2, exports2, __webpack_require__) {
             "use strict";
             function RandomSeed() {
             }
@@ -2306,10 +2306,10 @@ var require_layout_base = __commonJS({
               return RandomSeed.x - Math.floor(RandomSeed.x);
             };
             module2.exports = RandomSeed;
-          },
+          }),
           /* 17 */
           /***/
-          function(module2, exports2, __webpack_require__) {
+          (function(module2, exports2, __webpack_require__) {
             "use strict";
             var PointD = __webpack_require__(4);
             function Transform(x, y) {
@@ -2407,10 +2407,10 @@ var require_layout_base = __commonJS({
               return outPoint;
             };
             module2.exports = Transform;
-          },
+          }),
           /* 18 */
           /***/
-          function(module2, exports2, __webpack_require__) {
+          (function(module2, exports2, __webpack_require__) {
             "use strict";
             function _toConsumableArray(arr) {
               if (Array.isArray(arr)) {
@@ -2760,10 +2760,10 @@ var require_layout_base = __commonJS({
               return 0;
             };
             module2.exports = FDLayout;
-          },
+          }),
           /* 19 */
           /***/
-          function(module2, exports2, __webpack_require__) {
+          (function(module2, exports2, __webpack_require__) {
             "use strict";
             var LEdge = __webpack_require__(1);
             var FDLayoutConstants = __webpack_require__(7);
@@ -2776,10 +2776,10 @@ var require_layout_base = __commonJS({
               FDLayoutEdge[prop] = LEdge[prop];
             }
             module2.exports = FDLayoutEdge;
-          },
+          }),
           /* 20 */
           /***/
-          function(module2, exports2, __webpack_require__) {
+          (function(module2, exports2, __webpack_require__) {
             "use strict";
             var LNode = __webpack_require__(3);
             function FDLayoutNode(gm, loc, size, vNode) {
@@ -2809,10 +2809,10 @@ var require_layout_base = __commonJS({
               this.finishY = _finishY;
             };
             module2.exports = FDLayoutNode;
-          },
+          }),
           /* 21 */
           /***/
-          function(module2, exports2, __webpack_require__) {
+          (function(module2, exports2, __webpack_require__) {
             "use strict";
             function DimensionD2(width, height) {
               this.width = 0;
@@ -2835,10 +2835,10 @@ var require_layout_base = __commonJS({
               this.height = height;
             };
             module2.exports = DimensionD2;
-          },
+          }),
           /* 22 */
           /***/
-          function(module2, exports2, __webpack_require__) {
+          (function(module2, exports2, __webpack_require__) {
             "use strict";
             var UniqueIDGeneretor = __webpack_require__(14);
             function HashMap() {
@@ -2864,10 +2864,10 @@ var require_layout_base = __commonJS({
               return this.keys;
             };
             module2.exports = HashMap;
-          },
+          }),
           /* 23 */
           /***/
-          function(module2, exports2, __webpack_require__) {
+          (function(module2, exports2, __webpack_require__) {
             "use strict";
             var UniqueIDGeneretor = __webpack_require__(14);
             function HashSet() {
@@ -2911,12 +2911,12 @@ var require_layout_base = __commonJS({
               }
             };
             module2.exports = HashSet;
-          },
+          }),
           /* 24 */
           /***/
-          function(module2, exports2, __webpack_require__) {
+          (function(module2, exports2, __webpack_require__) {
             "use strict";
-            var _createClass = /* @__PURE__ */ function() {
+            var _createClass = /* @__PURE__ */ (function() {
               function defineProperties(target, props) {
                 for (var i = 0; i < props.length; i++) {
                   var descriptor = props[i];
@@ -2931,14 +2931,14 @@ var require_layout_base = __commonJS({
                 if (staticProps) defineProperties(Constructor, staticProps);
                 return Constructor;
               };
-            }();
+            })();
             function _classCallCheck(instance2, Constructor) {
               if (!(instance2 instanceof Constructor)) {
                 throw new TypeError("Cannot call a class as a function");
               }
             }
             var LinkedList = __webpack_require__(11);
-            var Quicksort = function() {
+            var Quicksort = (function() {
               function Quicksort2(A, compareFunction) {
                 _classCallCheck(this, Quicksort2);
                 if (compareFunction !== null || compareFunction !== void 0) this.compareFunction = this._defaultCompareFunction;
@@ -3002,14 +3002,14 @@ var require_layout_base = __commonJS({
                 }
               }]);
               return Quicksort2;
-            }();
+            })();
             module2.exports = Quicksort;
-          },
+          }),
           /* 25 */
           /***/
-          function(module2, exports2, __webpack_require__) {
+          (function(module2, exports2, __webpack_require__) {
             "use strict";
-            var _createClass = /* @__PURE__ */ function() {
+            var _createClass = /* @__PURE__ */ (function() {
               function defineProperties(target, props) {
                 for (var i = 0; i < props.length; i++) {
                   var descriptor = props[i];
@@ -3024,13 +3024,13 @@ var require_layout_base = __commonJS({
                 if (staticProps) defineProperties(Constructor, staticProps);
                 return Constructor;
               };
-            }();
+            })();
             function _classCallCheck(instance2, Constructor) {
               if (!(instance2 instanceof Constructor)) {
                 throw new TypeError("Cannot call a class as a function");
               }
             }
-            var NeedlemanWunsch = function() {
+            var NeedlemanWunsch = (function() {
               function NeedlemanWunsch2(sequence1, sequence2) {
                 var match_score = arguments.length > 2 && arguments[2] !== void 0 ? arguments[2] : 1;
                 var mismatch_penalty = arguments.length > 3 && arguments[3] !== void 0 ? arguments[3] : -1;
@@ -3157,12 +3157,12 @@ var require_layout_base = __commonJS({
                 }
               }]);
               return NeedlemanWunsch2;
-            }();
+            })();
             module2.exports = NeedlemanWunsch;
-          },
+          }),
           /* 26 */
           /***/
-          function(module2, exports2, __webpack_require__) {
+          (function(module2, exports2, __webpack_require__) {
             "use strict";
             var layoutBase = function layoutBase2() {
               return;
@@ -3194,10 +3194,10 @@ var require_layout_base = __commonJS({
             layoutBase.LayoutConstants = __webpack_require__(0);
             layoutBase.NeedlemanWunsch = __webpack_require__(25);
             module2.exports = layoutBase;
-          },
+          }),
           /* 27 */
           /***/
-          function(module2, exports2, __webpack_require__) {
+          (function(module2, exports2, __webpack_require__) {
             "use strict";
             function Emitter() {
               this.listeners = [];
@@ -3226,7 +3226,7 @@ var require_layout_base = __commonJS({
               }
             };
             module2.exports = Emitter;
-          }
+          })
           /******/
         ])
       );
@@ -3249,7 +3249,7 @@ var require_cose_base = __commonJS({
     })(exports, function(__WEBPACK_EXTERNAL_MODULE_0__) {
       return (
         /******/
-        function(modules) {
+        (function(modules) {
           var installedModules = {};
           function __webpack_require__(moduleId) {
             if (installedModules[moduleId]) {
@@ -3306,15 +3306,15 @@ var require_cose_base = __commonJS({
           };
           __webpack_require__.p = "";
           return __webpack_require__(__webpack_require__.s = 7);
-        }([
+        })([
           /* 0 */
           /***/
-          function(module2, exports2) {
+          (function(module2, exports2) {
             module2.exports = __WEBPACK_EXTERNAL_MODULE_0__;
-          },
+          }),
           /* 1 */
           /***/
-          function(module2, exports2, __webpack_require__) {
+          (function(module2, exports2, __webpack_require__) {
             "use strict";
             var FDLayoutConstants = __webpack_require__(0).FDLayoutConstants;
             function CoSEConstants() {
@@ -3330,10 +3330,10 @@ var require_cose_base = __commonJS({
             CoSEConstants.TILING_PADDING_HORIZONTAL = 10;
             CoSEConstants.TREE_REDUCTION_ON_INCREMENTAL = false;
             module2.exports = CoSEConstants;
-          },
+          }),
           /* 2 */
           /***/
-          function(module2, exports2, __webpack_require__) {
+          (function(module2, exports2, __webpack_require__) {
             "use strict";
             var FDLayoutEdge = __webpack_require__(0).FDLayoutEdge;
             function CoSEEdge(source, target, vEdge) {
@@ -3344,10 +3344,10 @@ var require_cose_base = __commonJS({
               CoSEEdge[prop] = FDLayoutEdge[prop];
             }
             module2.exports = CoSEEdge;
-          },
+          }),
           /* 3 */
           /***/
-          function(module2, exports2, __webpack_require__) {
+          (function(module2, exports2, __webpack_require__) {
             "use strict";
             var LGraph = __webpack_require__(0).LGraph;
             function CoSEGraph(parent, graphMgr, vGraph) {
@@ -3358,10 +3358,10 @@ var require_cose_base = __commonJS({
               CoSEGraph[prop] = LGraph[prop];
             }
             module2.exports = CoSEGraph;
-          },
+          }),
           /* 4 */
           /***/
-          function(module2, exports2, __webpack_require__) {
+          (function(module2, exports2, __webpack_require__) {
             "use strict";
             var LGraphManager = __webpack_require__(0).LGraphManager;
             function CoSEGraphManager(layout) {
@@ -3372,10 +3372,10 @@ var require_cose_base = __commonJS({
               CoSEGraphManager[prop] = LGraphManager[prop];
             }
             module2.exports = CoSEGraphManager;
-          },
+          }),
           /* 5 */
           /***/
-          function(module2, exports2, __webpack_require__) {
+          (function(module2, exports2, __webpack_require__) {
             "use strict";
             var FDLayoutNode = __webpack_require__(0).FDLayoutNode;
             var IMath = __webpack_require__(0).IMath;
@@ -3449,10 +3449,10 @@ var require_cose_base = __commonJS({
               return processed;
             };
             module2.exports = CoSENode;
-          },
+          }),
           /* 6 */
           /***/
-          function(module2, exports2, __webpack_require__) {
+          (function(module2, exports2, __webpack_require__) {
             "use strict";
             var FDLayout = __webpack_require__(0).FDLayout;
             var CoSEGraphManager = __webpack_require__(4);
@@ -4310,10 +4310,10 @@ var require_cose_base = __commonJS({
               }
             };
             module2.exports = CoSELayout;
-          },
+          }),
           /* 7 */
           /***/
-          function(module2, exports2, __webpack_require__) {
+          (function(module2, exports2, __webpack_require__) {
             "use strict";
             var coseBase = {};
             coseBase.layoutBase = __webpack_require__(0);
@@ -4324,7 +4324,7 @@ var require_cose_base = __commonJS({
             coseBase.CoSELayout = __webpack_require__(6);
             coseBase.CoSENode = __webpack_require__(5);
             module2.exports = coseBase;
-          }
+          })
           /******/
         ])
       );
@@ -4347,7 +4347,7 @@ var require_cytoscape_cose_bilkent = __commonJS({
     })(exports, function(__WEBPACK_EXTERNAL_MODULE_0__) {
       return (
         /******/
-        function(modules) {
+        (function(modules) {
           var installedModules = {};
           function __webpack_require__(moduleId) {
             if (installedModules[moduleId]) {
@@ -4404,15 +4404,15 @@ var require_cytoscape_cose_bilkent = __commonJS({
           };
           __webpack_require__.p = "";
           return __webpack_require__(__webpack_require__.s = 1);
-        }([
+        })([
           /* 0 */
           /***/
-          function(module2, exports2) {
+          (function(module2, exports2) {
             module2.exports = __WEBPACK_EXTERNAL_MODULE_0__;
-          },
+          }),
           /* 1 */
           /***/
-          function(module2, exports2, __webpack_require__) {
+          (function(module2, exports2, __webpack_require__) {
             "use strict";
             var LayoutConstants = __webpack_require__(0).layoutBase.LayoutConstants;
             var FDLayoutConstants = __webpack_require__(0).layoutBase.FDLayoutConstants;
@@ -4699,7 +4699,7 @@ var require_cytoscape_cose_bilkent = __commonJS({
               register(cytoscape);
             }
             module2.exports = register;
-          }
+          })
           /******/
         ])
       );
