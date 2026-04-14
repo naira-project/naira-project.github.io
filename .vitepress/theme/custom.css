@@ -11,24 +11,7 @@
             #47caff 50%
     );
     --vp-home-hero-image-filter: blur(44px);
-    
-    /* Increase the main content area width */
-    --vp-layout-max-width: 1600px;
 }
-
-
-.VPDoc:not(.has-sidebar) .container {
-  max-width: 1584px !important;
-}
-
-.VPDoc:not(.has-sidebar) .content {
-  max-width: 1264px !important;
-}
-
-.VPDoc.has-aside .content-container {
-  max-width: 1168px !important;
-}
-
 
 @media (min-width: 640px) {
     :root {
@@ -53,17 +36,7 @@ img[src='/search.png'] {
     aspect-ratio: 1 / 1;
 }
 
-
-/* Wrap the text in the right-hand sidebar */
-.VPDocAsideOutline .outline-link {
-    white-space: normal !important;
-}
-
-/* Medium zoom styles */
-.medium-zoom-overlay {
-  z-index: 100;
-}
-
-.medium-zoom-image--opened {
-  z-index: 101;
+.details a {
+    text-decoration: underline;
+    text-underline-offset: 2px;
 }

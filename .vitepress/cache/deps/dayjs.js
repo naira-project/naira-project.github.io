@@ -5,9 +5,9 @@ import {
 // node_modules/dayjs/dayjs.min.js
 var require_dayjs_min = __commonJS({
   "node_modules/dayjs/dayjs.min.js"(exports, module) {
-    !function(t, e) {
+    !(function(t, e) {
       "object" == typeof exports && "undefined" != typeof module ? module.exports = e() : "function" == typeof define && define.amd ? define(e) : (t = "undefined" != typeof globalThis ? globalThis : t || self).dayjs = e();
-    }(exports, function() {
+    })(exports, (function() {
       "use strict";
       var t = 1e3, e = 6e4, n = 36e5, r = "millisecond", i = "second", s = "minute", u = "hour", a = "day", o = "week", c = "month", f = "quarter", h = "year", d = "date", l = "Invalid Date", $ = /^(\d{4})[-/]?(\d{1,2})?[-/]?(\d{0,2})[Tt\s]*(\d{1,2})?:?(\d{1,2})?:?(\d{1,2})?[.:]?(\d+)?$/, y = /\[([^\]]+)]|Y{1,4}|M{1,4}|D{1,2}|d{1,4}|H{1,2}|h{1,2}|a|A|m{1,2}|s{1,2}|Z{1,2}|SSS/g, M = { name: "en", weekdays: "Sunday_Monday_Tuesday_Wednesday_Thursday_Friday_Saturday".split("_"), months: "January_February_March_April_May_June_July_August_September_October_November_December".split("_"), ordinal: function(t2) {
         var e2 = ["th", "st", "nd", "rd"], n2 = t2 % 100;
@@ -53,13 +53,13 @@ var require_dayjs_min = __commonJS({
       b.l = w, b.i = S, b.w = function(t2, e2) {
         return O(t2, { locale: e2.$L, utc: e2.$u, x: e2.$x, $offset: e2.$offset });
       };
-      var _ = function() {
+      var _ = (function() {
         function M2(t2) {
           this.$L = w(t2.locale, null, true), this.parse(t2), this.$x = this.$x || t2.x || {}, this[p] = true;
         }
         var m2 = M2.prototype;
         return m2.parse = function(t2) {
-          this.$d = function(t3) {
+          this.$d = (function(t3) {
             var e2 = t3.date, n2 = t3.utc;
             if (null === e2) return /* @__PURE__ */ new Date(NaN);
             if (b.u(e2)) return /* @__PURE__ */ new Date();
@@ -72,7 +72,7 @@ var require_dayjs_min = __commonJS({
               }
             }
             return new Date(e2);
-          }(t2), this.init();
+          })(t2), this.init();
         }, m2.init = function() {
           var t2 = this.$d;
           this.$y = t2.getFullYear(), this.$M = t2.getMonth(), this.$D = t2.getDate(), this.$W = t2.getDay(), this.$H = t2.getHours(), this.$m = t2.getMinutes(), this.$s = t2.getSeconds(), this.$ms = t2.getMilliseconds();
@@ -159,8 +159,8 @@ var require_dayjs_min = __commonJS({
             var r3 = t3 < 12 ? "AM" : "PM";
             return n3 ? r3.toLowerCase() : r3;
           };
-          return r2.replace(y, function(t3, r3) {
-            return r3 || function(t4) {
+          return r2.replace(y, (function(t3, r3) {
+            return r3 || (function(t4) {
               switch (t4) {
                 case "YY":
                   return String(e2.$y).slice(-2);
@@ -212,8 +212,8 @@ var require_dayjs_min = __commonJS({
                   return i2;
               }
               return null;
-            }(t3) || i2.replace(":", "");
-          });
+            })(t3) || i2.replace(":", "");
+          }));
         }, m2.utcOffset = function() {
           return 15 * -Math.round(this.$d.getTimezoneOffset() / 15);
         }, m2.diff = function(r2, d2, l2) {
@@ -268,17 +268,17 @@ var require_dayjs_min = __commonJS({
         }, m2.toString = function() {
           return this.$d.toUTCString();
         }, M2;
-      }(), k = _.prototype;
-      return O.prototype = k, [["$ms", r], ["$s", i], ["$m", s], ["$H", u], ["$W", a], ["$M", c], ["$y", h], ["$D", d]].forEach(function(t2) {
+      })(), k = _.prototype;
+      return O.prototype = k, [["$ms", r], ["$s", i], ["$m", s], ["$H", u], ["$W", a], ["$M", c], ["$y", h], ["$D", d]].forEach((function(t2) {
         k[t2[1]] = function(e2) {
           return this.$g(e2, t2[0], t2[1]);
         };
-      }), O.extend = function(t2, e2) {
+      })), O.extend = function(t2, e2) {
         return t2.$i || (t2(e2, _, O), t2.$i = true), O;
       }, O.locale = w, O.isDayjs = S, O.unix = function(t2) {
         return O(1e3 * t2);
       }, O.en = D[g], O.Ls = D, O.p = {}, O;
-    });
+    }));
   }
 });
 export default require_dayjs_min();
