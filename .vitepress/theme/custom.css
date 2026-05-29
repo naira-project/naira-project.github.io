@@ -1,3 +1,7 @@
+html {
+    font-size: 20px;
+}
+
 :root {
     --vp-home-hero-name-color: transparent;
     --vp-home-hero-name-background: -webkit-linear-gradient(
