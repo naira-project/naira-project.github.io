@@ -39,6 +39,14 @@ export default withMermaid({
   lastUpdated: true,
 
   vite: {
+    build: {
+      target: "esnext",
+    },
+    optimizeDeps: {
+      esbuildOptions: {
+        target: "esnext",
+      },
+    },
     resolve: {
       alias: [
         {

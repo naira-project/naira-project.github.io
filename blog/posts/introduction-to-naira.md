@@ -26,6 +26,9 @@ Modern software engineering is already complex. Teams work with source control, 
 
 AI adds another layer of complexity. Same problems to solve as with software engineering, but different tools. So to say it increases the cognitive load for everyone yet again.
 
+Just as an example, the following image shows some basic domains for an AI factory. For each of these boxes we docens of options. Hard to manage, easy to lose an overview.
+![Example AI Factory](/blog/ai_factory_architecture.png)
+
 Teams now also need to understand:
 
 - which models exist;
@@ -129,6 +132,8 @@ They need to know:
 
 Naira should help an application developer move from “I need AI in my application” to “I know which approved service to use, how it is exposed and what my next step is.”
 
+![Naira the AI Engineering Hub](/blog/Naira-AI-Engineering-Hub.png)
+
 ### For Platform Engineers
 
 Platform engineers are responsible for making AI workloads reliable, secure and operable. They need to understand what runs where, which teams depend on it and what could break when infrastructure changes.
@@ -181,11 +186,11 @@ Naira should make those relationships visible and navigable. This is what turns 
 
 ### 3. Provide Role-Oriented Views
 
-Different users need different entry points.
+Different users need different perspective.
 
-A platform engineer may start from workspaces, health, and dependencies. An application developer may start from approved services, templates, and documentation. An AI engineer may start from models, datasets, evaluations, and deployments.
+A platform engineer may prioritize workspaces, health information and dependencies. An application developer may look at approved services, templates and documentation. An AI engineer may start from models, datasets, evaluations and deployments.
 
-Naira should not expose every detail to every user in the same way. The hub should guide users based on their goals while still keeping the underlying context connected.
+Naira should guide users based on their goals while still keeping the underlying context connected.
 
 ### 4. Make Governance Part of the Experience
 
@@ -209,6 +214,8 @@ Naira is:
 In short:
 
 > Naira helps teams understand what AI capabilities exist, how they are connected, who owns them, where they run, and how they can be used safely.
+
+![Naira Hub](/blog/Naira-hub.jpeg)
 
 
 ## What Naira Is Not
