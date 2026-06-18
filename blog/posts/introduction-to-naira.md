@@ -26,7 +26,7 @@ Modern software engineering is already complex. Teams work with source control, 
 
 AI adds another layer of complexity. Same problems to solve as with software engineering, but different tools. So to say it increases the cognitive load for everyone yet again.
 
-Just as an example, the following image shows some basic domains for an AI factory. For each of these boxes we docens of options. Hard to manage, easy to lose an overview.
+Just as an example, the following image shows some basic domains for an AI factory. For each of these boxes we have dozens of options. Hard to manage, easy to lose an overview.
 ![Example AI Factory](/blog/ai_factory_architecture.png)
 
 Teams now also need to understand:
@@ -144,7 +144,7 @@ With Naira, a platform engineer should be able to answer questions like:
 - Which applications consume this model or endpoint?
 - Which gateway route exposes this AI service?
 - Who owns this component?
-- Which dashboards or traces help diagnose an issue?
+- Which dashboards or traces are useful for diagnosing issues?
 - Which plugin provided this metadata, and when was it last synchronized?
 
 Instead of jumping between many tools and reconstructing the dependency map manually, Naira provides a connected operational view.
