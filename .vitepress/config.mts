@@ -1,5 +1,25 @@
 import { fileURLToPath, URL } from "node:url";
 import { withMermaid } from "vitepress-plugin-mermaid";
+import { readAllPosts } from "./blog-posts-fs";
+
+function buildBlogSidebar() {
+  const posts = readAllPosts();
+  const byYear = new Map<string, { text: string; link: string }[]>();
+  for (const post of posts) {
+    if (!byYear.has(post.year)) byYear.set(post.year, []);
+    byYear.get(post.year)!.push({
+      text: post.title,
+      link: `/blog/posts/${post.slug}`,
+    });
+  }
+  return [...byYear.keys()]
+    .sort((a, b) => Number(b) - Number(a))
+    .map((year) => ({
+      text: year,
+      collapsed: false,
+      items: byYear.get(year)!,
+    }));
+}
 
 // https://vitepress.dev/reference/site-config
 export default withMermaid({
@@ -19,6 +39,14 @@ export default withMermaid({
   lastUpdated: true,
 
   vite: {
+    build: {
+      target: "esnext",
+    },
+    optimizeDeps: {
+      esbuildOptions: {
+        target: "esnext",
+      },
+    },
     resolve: {
       alias: [
         {
@@ -41,7 +69,8 @@ export default withMermaid({
     // https://vitepress.dev/reference/default-theme-config
     nav: [
       { text: "Home", link: "/" },
-      { text: "Documentation", link: "documentation" },
+      { text: "Documentation", link: "/documentation/" },
+      { text: "Blog", link: "/blog/", activeMatch: "^/blog/" },
     ],
 
     editLink: {
@@ -61,7 +90,7 @@ export default withMermaid({
     },
 
     sidebar: {
-      "/": [
+      "/documentation/": [
         {
           text: "Documentation",
           items: [
@@ -72,6 +101,7 @@ export default withMermaid({
           ],
         },
       ],
+      "/blog/": buildBlogSidebar(),
     },
 
     socialLinks: [{ icon: "github", link: "https://github.com/naira-project" }],

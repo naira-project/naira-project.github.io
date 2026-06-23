@@ -1,4 +1,4 @@
-import "./chunk-BUSYA2B4.js";
+import "./chunk-Q4AC2O6Z.js";
 
 // node_modules/@vue/devtools-shared/dist/index.js
 var __create = Object.create;
@@ -2534,7 +2534,6 @@ function toRaw(observed) {
   ];
   return raw ? toRaw(raw) : observed;
 }
-var Fragment = Symbol.for("v-fgt");
 var StateEditor = class {
   constructor() {
     this.refEditor = new RefStateEditor();

@@ -1,3 +1,7 @@
+html {
+    font-size: 20px;
+}
+
 :root {
     --vp-home-hero-name-color: transparent;
     --vp-home-hero-name-background: -webkit-linear-gradient(
@@ -39,4 +43,21 @@ img[src='/search.png'] {
 .details a {
     text-decoration: underline;
     text-underline-offset: 2px;
+}
+
+:root {
+    --naira-petrol: #006D77;
+}
+
+.dark {
+    --naira-petrol: #4DB6BF;
+}
+
+.vp-doc blockquote {
+    color: var(--naira-petrol);
+    border-left-color: var(--naira-petrol);
+}
+
+.vp-doc blockquote > p {
+    color: var(--naira-petrol);
 }
