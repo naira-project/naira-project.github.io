@@ -4,8 +4,8 @@ layout: home
 
 hero:
   name: "Naira"
-  text: "The AI Engineering Development Platform"
-  tagline: "An open source internal development platform to enable organizations building AI first platforms"
+  text: "The AI Engineering Hub"
+  tagline: "An open-source AI Engineering Hub that connects existing AI tools into one place to discover, govern and operate AI assets and services and their related components."
   image:
     src: '/logo.png'
     alt: 'Naira'
