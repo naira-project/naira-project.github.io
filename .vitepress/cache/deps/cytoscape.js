@@ -1547,7 +1547,7 @@ var hasRequiredHeap$1;
 function requireHeap$1() {
   if (hasRequiredHeap$1) return heap$2.exports;
   hasRequiredHeap$1 = 1;
-  (function(module, exports) {
+  (function(module, exports$1) {
     (function() {
       var Heap2, defaultCmp, floor, heapify, heappop, heappush, heappushpop, heapreplace, insort, min4, nlargest, nsmallest, updateItem, _siftdown, _siftup;
       floor = Math.floor, min4 = Math.min;
@@ -5020,19 +5020,19 @@ var affinityPropagation = function affinityPropagation2(options2) {
       A[_i9 * n + _i9] = (1 - opts.damping) * (sum - Rp[_i9]) + opts.damping * old[_i9];
     }
     var K2 = 0;
-    for (var _i10 = 0; _i10 < n; _i10++) {
-      var E = A[_i10 * n + _i10] + R[_i10 * n + _i10] > 0 ? 1 : 0;
-      e[iter % opts.minIterations * n + _i10] = E;
+    for (var _i0 = 0; _i0 < n; _i0++) {
+      var E = A[_i0 * n + _i0] + R[_i0 * n + _i0] > 0 ? 1 : 0;
+      e[iter % opts.minIterations * n + _i0] = E;
       K2 += E;
     }
     if (K2 > 0 && (iter >= opts.minIterations - 1 || iter == opts.maxIterations - 1)) {
       var _sum = 0;
-      for (var _i11 = 0; _i11 < n; _i11++) {
-        se[_i11] = 0;
+      for (var _i1 = 0; _i1 < n; _i1++) {
+        se[_i1] = 0;
         for (var _j5 = 0; _j5 < opts.minIterations; _j5++) {
-          se[_i11] += e[_j5 * n + _i11];
+          se[_i1] += e[_j5 * n + _i1];
         }
-        if (se[_i11] === 0 || se[_i11] === opts.minIterations) {
+        if (se[_i1] === 0 || se[_i1] === opts.minIterations) {
           _sum++;
         }
       }
@@ -5047,11 +5047,11 @@ var affinityPropagation = function affinityPropagation2(options2) {
   for (var c = 0; c < exemplarsIndices.length; c++) {
     clusters[exemplarsIndices[c]] = [];
   }
-  for (var _i12 = 0; _i12 < nodes3.length; _i12++) {
-    var pos = id2position[nodes3[_i12].id()];
+  for (var _i10 = 0; _i10 < nodes3.length; _i10++) {
+    var pos = id2position[nodes3[_i10].id()];
     var clusterIndex = clusterIndices[pos];
     if (clusterIndex != null) {
-      clusters[clusterIndex].push(nodes3[_i12]);
+      clusters[clusterIndex].push(nodes3[_i10]);
     }
   }
   var retClusters = new Array(exemplarsIndices.length);
@@ -7361,7 +7361,7 @@ var exprs = [{
   query: true,
   regex: "\\[\\s*(" + tokens.variable + ")\\s*\\]",
   populate: function populate5(selector, query, _ref9) {
-    var _ref10 = _slicedToArray(_ref9, 1), variable = _ref10[0];
+    var _ref0 = _slicedToArray(_ref9, 1), variable = _ref0[0];
     query.checks.push({
       type: Type.DATA_EXIST,
       field: cleanMetaChars(variable)
@@ -7371,8 +7371,8 @@ var exprs = [{
   name: "dataCompare",
   query: true,
   regex: "\\[\\s*(" + tokens.variable + ")\\s*(" + tokens.comparatorOp + ")\\s*(" + tokens.value + ")\\s*\\]",
-  populate: function populate6(selector, query, _ref11) {
-    var _ref12 = _slicedToArray(_ref11, 3), variable = _ref12[0], comparatorOp = _ref12[1], value = _ref12[2];
+  populate: function populate6(selector, query, _ref1) {
+    var _ref10 = _slicedToArray(_ref1, 3), variable = _ref10[0], comparatorOp = _ref10[1], value = _ref10[2];
     var valueIsString = new RegExp("^" + tokens.string + "$").exec(value) != null;
     if (valueIsString) {
       value = value.substring(1, value.length - 1);
@@ -7390,8 +7390,8 @@ var exprs = [{
   name: "dataBool",
   query: true,
   regex: "\\[\\s*(" + tokens.boolOp + ")\\s*(" + tokens.variable + ")\\s*\\]",
-  populate: function populate7(selector, query, _ref13) {
-    var _ref14 = _slicedToArray(_ref13, 2), boolOp = _ref14[0], variable = _ref14[1];
+  populate: function populate7(selector, query, _ref11) {
+    var _ref12 = _slicedToArray(_ref11, 2), boolOp = _ref12[0], variable = _ref12[1];
     query.checks.push({
       type: Type.DATA_BOOL,
       field: cleanMetaChars(variable),
@@ -7402,8 +7402,8 @@ var exprs = [{
   name: "metaCompare",
   query: true,
   regex: "\\[\\[\\s*(" + tokens.meta + ")\\s*(" + tokens.comparatorOp + ")\\s*(" + tokens.number + ")\\s*\\]\\]",
-  populate: function populate8(selector, query, _ref15) {
-    var _ref16 = _slicedToArray(_ref15, 3), meta3 = _ref16[0], comparatorOp = _ref16[1], number3 = _ref16[2];
+  populate: function populate8(selector, query, _ref13) {
+    var _ref14 = _slicedToArray(_ref13, 3), meta3 = _ref14[0], comparatorOp = _ref14[1], number3 = _ref14[2];
     query.checks.push({
       type: Type.META_COMPARE,
       field: cleanMetaChars(meta3),
@@ -8725,6 +8725,44 @@ fn$4.modelPositions = fn$4.points = fn$4.positions;
 fn$4.renderedPoint = fn$4.renderedPosition;
 fn$4.relativePoint = fn$4.relativePosition;
 var position = elesfn$c;
+var labelHalign = function labelHalign2(halign) {
+  switch (halign) {
+    case "left":
+    case "right-inside":
+      return "left";
+    case "right":
+    case "left-inside":
+      return "right";
+    default:
+      return "center";
+  }
+};
+var labelValign = function labelValign2(valign) {
+  switch (valign) {
+    case "top":
+    case "bottom-inside":
+      return "top";
+    case "bottom":
+    case "top-inside":
+      return "bottom";
+    default:
+      return "center";
+  }
+};
+var labelJustification = function labelJustification2(halign) {
+  switch (halign) {
+    case "left":
+      return "right";
+    case "right":
+      return "left";
+    case "left-inside":
+      return "left";
+    case "right-inside":
+      return "right";
+    default:
+      return "center";
+  }
+};
 var fn$3;
 var elesfn$b;
 fn$3 = elesfn$b = {};
@@ -8987,7 +9025,7 @@ var updateBoundsFromLabel = function updateBoundsFromLabel2(bounds2, ele, prefix
       ly1 = labelY - lh_2;
       ly2 = labelY + lh_2;
     } else {
-      switch (halign.value) {
+      switch (labelHalign(halign.value)) {
         case "left":
           lx1 = labelX - lw;
           lx2 = labelX;
@@ -9001,7 +9039,7 @@ var updateBoundsFromLabel = function updateBoundsFromLabel2(bounds2, ele, prefix
           lx2 = labelX + lw;
           break;
       }
-      switch (valign.value) {
+      switch (labelValign(valign.value)) {
         case "top":
           ly1 = labelY - lh;
           ly2 = labelY;
@@ -9046,7 +9084,7 @@ var updateBoundsFromLabel = function updateBoundsFromLabel2(bounds2, ele, prefix
       var xo = (lx1 + lx2) / 2;
       var yo = (ly1 + ly2) / 2;
       if (!isEdge2) {
-        switch (halign.value) {
+        switch (labelHalign(halign.value)) {
           case "left":
             xo = lx2;
             break;
@@ -9054,7 +9092,7 @@ var updateBoundsFromLabel = function updateBoundsFromLabel2(bounds2, ele, prefix
             xo = lx1;
             break;
         }
-        switch (valign.value) {
+        switch (labelValign(valign.value)) {
           case "top":
             yo = ly2;
             break;
@@ -14388,13 +14426,16 @@ var styfn$2 = {};
       enums: ["auto", "manual"]
     },
     valign: {
-      enums: ["top", "center", "bottom"]
+      enums: ["top", "top-inside", "center", "bottom", "bottom-inside"]
     },
     halign: {
-      enums: ["left", "center", "right"]
+      enums: ["left", "left-inside", "center", "right", "right-inside"]
     },
     justification: {
       enums: ["left", "center", "right", "auto"]
+    },
+    textMetrics: {
+      enums: ["font", "glyph"]
     },
     text: {
       string: true
@@ -14682,6 +14723,9 @@ var styfn$2 = {};
   }, {
     name: "text-justification",
     type: t.justification
+  }, {
+    name: "text-metrics",
+    type: t.textMetrics
   }, {
     name: "box-select-labels",
     type: t.bool,
@@ -15399,6 +15443,7 @@ styfn$2.getDefaultProperties = function() {
     "underlay-padding": 10,
     "underlay-shape": "round-rectangle",
     "underlay-corner-radius": "auto",
+    "text-metrics": "font",
     "transition-property": "none",
     "transition-duration": 0,
     "transition-delay": 0,
@@ -18064,7 +18109,7 @@ var calculateNodeForces = function calculateNodeForces2(layoutInfo, options2) {
   }
 };
 var randomDistance = function randomDistance2(max5) {
-  return -1 + 2 * max5 * Math.random();
+  return -max5 + 2 * max5 * Math.random();
 };
 var nodeRepulsion2 = function nodeRepulsion3(node1, node2, layoutInfo, options2) {
   var cmptId1 = node1.cmptId;
@@ -20614,12 +20659,14 @@ BRp$b.findEndpoints = function(edge) {
       var lw2 = lw / 2;
       var lh2 = lh / 2;
       var va = target.pstyle("text-valign").value;
+      va = labelValign(va);
       if (va === "top") {
         ly -= lh2;
       } else if (va === "bottom") {
         ly += lh2;
       }
       var ha = target.pstyle("text-halign").value;
+      ha = labelHalign(ha);
       if (ha === "left") {
         lx -= lw2;
       } else if (ha === "right") {
@@ -20675,12 +20722,14 @@ BRp$b.findEndpoints = function(edge) {
       var _lw2 = _lw / 2;
       var _lh2 = _lh / 2;
       var _va = source.pstyle("text-valign").value;
+      _va = labelValign(_va);
       if (_va === "top") {
         _ly -= _lh2;
       } else if (_va === "bottom") {
         _ly += _lh2;
       }
       var _ha = source.pstyle("text-halign").value;
+      _ha = labelHalign(_ha);
       if (_ha === "left") {
         _lx -= _lw2;
       } else if (_ha === "right") {
@@ -20824,8 +20873,14 @@ BRp$9.recalculateNodeLabelProjection = function(node) {
     case "left":
       textX = nodePos.x - nodeWidth / 2 - padding;
       break;
+    case "left-inside":
+      textX = nodePos.x - nodeWidth / 2 + padding;
+      break;
     case "right":
       textX = nodePos.x + nodeWidth / 2 + padding;
+      break;
+    case "right-inside":
+      textX = nodePos.x + nodeWidth / 2 - padding;
       break;
     default:
       textX = nodePos.x;
@@ -20834,8 +20889,14 @@ BRp$9.recalculateNodeLabelProjection = function(node) {
     case "top":
       textY = nodePos.y - nodeHeight / 2 - padding;
       break;
+    case "top-inside":
+      textY = nodePos.y - nodeHeight / 2 + padding;
+      break;
     case "bottom":
       textY = nodePos.y + nodeHeight / 2 + padding;
+      break;
+    case "bottom-inside":
+      textY = nodePos.y + nodeHeight / 2 - padding;
       break;
     default:
       textY = nodePos.y;
@@ -21060,18 +21121,19 @@ BRp$9.applyPrefixedLabelDimensions = function(ele, prefix) {
   setPrefixedProperty(_p.rscratch, "prefixedLabelDimsKey", prefix, cacheKey);
   var labelDims = this.calculateLabelDimensions(ele, text);
   var lineHeight = ele.pstyle("line-height").pfValue;
+  var size3 = ele.pstyle("font-size").pfValue;
   var textWrap = ele.pstyle("text-wrap").strValue;
   var lines = getPrefixedProperty(_p.rscratch, "labelWrapCachedLines", prefix) || [];
   var numLines = textWrap !== "wrap" ? 1 : Math.max(lines.length, 1);
-  var normPerLineHeight = labelDims.height / numLines;
-  var labelLineHeight = normPerLineHeight * lineHeight;
+  var labelLineHeight = size3 * lineHeight;
   var width2 = labelDims.width;
-  var height2 = labelDims.height + (numLines - 1) * (lineHeight - 1) * normPerLineHeight;
+  var height2 = labelDims.height + (numLines - 1) * (lineHeight - 1) * size3;
   setPrefixedProperty(_p.rstyle, "labelWidth", prefix, width2);
   setPrefixedProperty(_p.rscratch, "labelWidth", prefix, width2);
   setPrefixedProperty(_p.rstyle, "labelHeight", prefix, height2);
   setPrefixedProperty(_p.rscratch, "labelHeight", prefix, height2);
   setPrefixedProperty(_p.rscratch, "labelLineHeight", prefix, labelLineHeight);
+  setPrefixedProperty(_p.rscratch, "labelActualDescent", prefix, labelDims.labelActualDescent);
 };
 BRp$9.getLabelText = function(ele, prefix) {
   var _p = ele._private;
@@ -21184,14 +21246,7 @@ BRp$9.getLabelJustification = function(ele) {
   var textHalign = ele.pstyle("text-halign").strValue;
   if (justification === "auto") {
     if (ele.isNode()) {
-      switch (textHalign) {
-        case "left":
-          return "right";
-        case "right":
-          return "left";
-        default:
-          return "center";
-      }
+      return labelJustification(textHalign);
     } else {
       return "center";
     }
@@ -21208,6 +21263,7 @@ BRp$9.calculateLabelDimensions = function(ele, text) {
   var size3 = ele.pstyle("font-size").pfValue;
   var family = ele.pstyle("font-family").strValue;
   var weight8 = ele.pstyle("font-weight").strValue;
+  var textMetrics = ele.pstyle("text-metrics").strValue || "font";
   var canvas = this.labelCalcCanvas;
   var c2d = this.labelCalcCanvasContext;
   if (!canvas) {
@@ -21225,19 +21281,35 @@ BRp$9.calculateLabelDimensions = function(ele, text) {
   var width2 = 0;
   var height2 = 0;
   var lines = text.split("\n");
-  for (var i2 = 0; i2 < lines.length; i2++) {
+  var lineCount = lines.length;
+  var labelActualDescent = 0;
+  var labelActualAscent = 0;
+  for (var i2 = 0; i2 < lineCount; i2++) {
     var line = lines[i2];
     var metrics = c2d.measureText(line);
     var w = Math.ceil(metrics.width);
     var h = size3;
+    if (textMetrics === "glyph") {
+      if (i2 === 0) {
+        labelActualAscent = metrics.actualBoundingBoxAscent;
+      }
+      if (i2 === lineCount - 1) {
+        labelActualDescent = metrics.actualBoundingBoxDescent;
+      }
+    }
     width2 = Math.max(w, width2);
     height2 += h;
+  }
+  if (textMetrics === "glyph") {
+    height2 -= size3 - labelActualAscent - labelActualDescent;
   }
   width2 += padding;
   height2 += padding;
   return {
     width: width2,
-    height: height2
+    height: height2,
+    labelActualAscent,
+    labelActualDescent
   };
 };
 BRp$9.calculateLabelAngle = function(ele, prefix) {
@@ -21493,6 +21565,20 @@ BRp$4.getCachedImage = function(url, crossOrigin, onLoad) {
     return image;
   }
 };
+var setGrabState = function setGrabState2(ele, grabbed) {
+  var ele0 = ele[0];
+  if (!ele0 || ele0._private.grabbed === grabbed) {
+    return;
+  }
+  ele0._private.grabbed = grabbed;
+  ele.updateStyle(false);
+};
+var setGrabbed = function setGrabbed2(ele) {
+  setGrabState(ele, true);
+};
+var setFreed = function setFreed2(ele) {
+  setGrabState(ele, false);
+};
 var BRp$3 = {};
 BRp$3.registerBinding = function(target, event3, handler, useCapture) {
   var args = Array.prototype.slice.apply(arguments, [1]);
@@ -21599,12 +21685,6 @@ BRp$3.load = function() {
       allowPassthrough = true;
     }
     return allowPassthrough;
-  };
-  var setGrabbed = function setGrabbed2(ele) {
-    ele[0]._private.grabbed = true;
-  };
-  var setFreed = function setFreed2(ele) {
-    ele[0]._private.grabbed = false;
   };
   var setInDragLayer = function setInDragLayer2(ele) {
     ele[0]._private.rscratch.inDragLayer = true;
@@ -25668,8 +25748,9 @@ CRp$7.drawElementText = function(context, ele, shiftToOriginWithBb, force, prefi
       return;
     }
     var justification = r.getLabelJustification(ele);
+    var isTextMetricsGlyph = ele.pstyle("text-metrics").strValue === "glyph";
     context.textAlign = justification;
-    context.textBaseline = "bottom";
+    context.textBaseline = isTextMetricsGlyph ? "alphabetic" : "bottom";
   } else {
     var badLine = ele.element()._private.rscratch.badLine;
     var _label = ele.pstyle("label");
@@ -25791,6 +25872,7 @@ CRp$7.drawText = function(context, ele, prefix) {
     var pdash = prefix ? prefix + "-" : "";
     var textW = getPrefixedProperty(rscratch, "labelWidth", prefix);
     var textH = getPrefixedProperty(rscratch, "labelHeight", prefix);
+    var labelActualDescent = getPrefixedProperty(rscratch, "labelActualDescent", prefix);
     var marginX = ele.pstyle(pdash + "text-margin-x").pfValue;
     var marginY = ele.pstyle(pdash + "text-margin-y").pfValue;
     var isEdge2 = ele.isEdge();
@@ -25816,7 +25898,9 @@ CRp$7.drawText = function(context, ele, prefix) {
       textX = 0;
       textY = 0;
     }
-    switch (valign) {
+    var boxHalign = labelHalign(halign);
+    var boxValign = labelValign(valign);
+    switch (boxValign) {
       case "top":
         break;
       case "center":
@@ -25844,7 +25928,7 @@ CRp$7.drawText = function(context, ele, prefix) {
       var doFill = backgroundOpacity > 0;
       var doStroke = textBorderWidth > 0 && borderOpacity > 0;
       var bgX = textX - backgroundPadding;
-      switch (halign) {
+      switch (boxHalign) {
         case "left":
           bgX -= textW;
           break;
@@ -25911,32 +25995,33 @@ CRp$7.drawText = function(context, ele, prefix) {
     if (lineWidth > 0) {
       context.lineWidth = lineWidth;
     }
+    textY -= labelActualDescent;
     if (ele.pstyle("text-wrap").value === "wrap") {
       var lines = getPrefixedProperty(rscratch, "labelWrapCachedLines", prefix);
       var lineHeight = getPrefixedProperty(rscratch, "labelLineHeight", prefix);
       var halfTextW = textW / 2;
       var justification = this.getLabelJustification(ele);
       if (justification === "auto") ;
-      else if (halign === "left") {
+      else if (boxHalign === "left") {
         if (justification === "left") {
           textX += -textW;
         } else if (justification === "center") {
           textX += -halfTextW;
         }
-      } else if (halign === "center") {
+      } else if (boxHalign === "center") {
         if (justification === "left") {
           textX += -halfTextW;
         } else if (justification === "right") {
           textX += halfTextW;
         }
-      } else if (halign === "right") {
+      } else if (boxHalign === "right") {
         if (justification === "center") {
           textX += halfTextW;
         } else if (justification === "right") {
           textX += textW;
         }
       }
-      switch (valign) {
+      switch (boxValign) {
         case "top":
           textY -= (lines.length - 1) * lineHeight;
           break;
@@ -28538,10 +28623,11 @@ var ElementDrawingWebGL = (function() {
       }
       var indexView = this.indexBuffer.getView(instance);
       indexToVec4(eleIndex, indexView);
-      var opacity = this.renderTarget.picking ? 1 : node.pstyle(props.opacity).value;
+      var opacity = this.renderTarget.picking ? 1 : type === "node-body" ? node.effectiveOpacity() : 1;
+      var bgOpacity = this.renderTarget.picking ? 1 : node.pstyle(props.opacity).value * opacity;
       var color = node.pstyle(props.color).value;
       var colorView = this.colorBuffer.getView(instance);
-      toWebGLColor(color, opacity, colorView);
+      toWebGLColor(color, bgOpacity, colorView);
       var lineWidthView = this.lineWidthBuffer.getView(instance);
       lineWidthView[0] = 0;
       lineWidthView[1] = 0;
@@ -28549,7 +28635,7 @@ var ElementDrawingWebGL = (function() {
         var borderWidth = node.pstyle("border-width").value;
         if (borderWidth > 0) {
           var borderColor = node.pstyle("border-color").value;
-          var borderOpacity = node.pstyle("border-opacity").value;
+          var borderOpacity = opacity * node.pstyle("border-opacity").value;
           var borderColorView = this.borderColorBuffer.getView(instance);
           toWebGLColor(borderColor, borderOpacity, borderColorView);
           var borderPos = node.pstyle("border-position").value;
@@ -29802,7 +29888,7 @@ function CanvasRenderer(options2) {
     var bb = getLabelBox(ele);
     var p2 = getCenterOffset(getLabelBox(ele));
     if (ele.isNode()) {
-      switch (ele.pstyle("text-halign").value) {
+      switch (labelHalign(ele.pstyle("text-halign").value)) {
         case "left":
           p2.x = -bb.w - (bb.leftPad || 0);
           break;
@@ -29810,7 +29896,7 @@ function CanvasRenderer(options2) {
           p2.x = -(bb.rightPad || 0);
           break;
       }
-      switch (ele.pstyle("text-valign").value) {
+      switch (labelValign(ele.pstyle("text-valign").value)) {
         case "top":
           p2.y = -bb.h - (bb.topPad || 0);
           break;
@@ -30243,7 +30329,7 @@ sheetfn.appendToStyle = function(style3) {
   }
   return style3;
 };
-var version = "3.33.2";
+var version = "3.34.0";
 var cytoscape = function cytoscape2(options2) {
   if (options2 === void 0) {
     options2 = {};
