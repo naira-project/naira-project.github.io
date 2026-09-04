@@ -78,19 +78,25 @@ and let your delivery pipeline update the ConfigMap.
 | `radar.owner` | yes | Owning team or board. |
 | `quadrants` | yes | Exactly **4** quadrants, in display order. Each has `id` and `name`. |
 | `rings` | yes | 1–6 rings, ordered **innermost to outermost**. Each has `id`, `name`, and an optional `description`. |
-| `entries` | yes | The radar entries (may be empty). |
+| `entries` | yes | The radar entries. Must be present — use `[]` for a radar without entries; omitting the key is a validation error, so an accidentally deleted block cannot silently wipe the radar. |
 | `entries[].id` | yes | Stable identifier; with `radar.id` it forms the node path. |
 | `entries[].name` | yes | Display name. |
 | `entries[].quadrant` | yes | Must match a declared quadrant `id`. |
 | `entries[].ring` | yes | Must match a declared ring `id`. |
 | `entries[].moved` | no | `in`, `out`, or `none` (default). Movement since the previous edition. |
 | `entries[].owner` | yes | Team accountable for the decision. |
-| `entries[].rationale` | yes | Why the entry sits in its ring. Truncated at 2000 characters. |
+| `entries[].rationale` | yes | Why the entry sits in its ring. |
 
-All `id` fields must match `^[a-z0-9][a-z0-9_-]*$`. Unknown fields are
-rejected, so typos surface as validation errors instead of being silently
-ignored. Entry order in the file is canonical: it drives the numbering on the
-radar chart and in the quadrant summaries.
+All `id` fields must match `^[a-z0-9][a-z0-9_-]*$` and be at most 100
+characters; ids become node paths, so oversized ids are rejected rather than
+clipped. Unknown fields are rejected, so typos surface as validation errors
+instead of being silently ignored. Entry order in the file is canonical: it
+drives the numbering on the radar chart and in the quadrant summaries.
+
+Free-form text is clipped rather than rejected, so an oversized value never
+blocks a sync: short labels (titles, names, owners, the edition) are capped at
+200 characters and long-form text (an entry's rationale, a ring's description)
+at 2000, each with a trailing ellipsis and a warning in the plugin log.
 
 ## Annotated example
 
