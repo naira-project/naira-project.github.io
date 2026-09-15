@@ -96,6 +96,7 @@ export default withMermaid({
           items: [
             { text: "Introduction", link: "/documentation/" },
             { text: "Concepts", link: "/documentation/concepts" },
+            { text: "Tech Radar", link: "/documentation/tech-radar" },
             { text: "Contribute", link: "/documentation/contribute" },
             { text: "Community", link: "/documentation/community" },
           ],
