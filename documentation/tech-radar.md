@@ -1,13 +1,15 @@
 # Tech Radar
 
-The Tech Radar is a read-only governance view: it shows which technologies —
-models, agentic patterns, knowledge techniques — the organization has decided
+The Tech Radar is a read-only governance view. It shows which technologies
+(models, agentic patterns, knowledge techniques) the organization has decided
 to adopt, trial, assess, or hold, next to the assets the catalogs already
-describe. Decisions are managed in a single YAML configuration file; the
-portal renders it and offers no write path, so governance stays auditable
-through whatever review process already owns that file.
+describe. Decisions are managed in a single YAML configuration file. The
+portal renders that file and offers no write path, so governance stays
+auditable through whatever review process already owns the file.
 
-The radar deliberately carries **no links into the catalog**: it expresses the
+![The Tech Radar overview: entries plotted across four quadrants and the adopt, trial, assess, and hold rings](/documentation/tech-radar-1.png)
+
+The radar deliberately carries **no links into the catalog**. It expresses the
 organization's *target vision*, not what is currently deployed or in use.
 
 ## How it works
@@ -24,7 +26,8 @@ The radar is provided by the `tech-radar` plugin:
   field, and reason**. A failed collect never touches the store, so the
   previous radar stays visible ("last known good"). The errors appear in the
   plugin log and in the sync operation's error message on the Plugins page.
-- Radar data is served by the standard catalog API — no dedicated endpoints:
+- Radar data is served by the standard catalog API, with no dedicated
+  endpoints:
 
   ```
   GET /v1/nodes?filter=kind="tech_radar"
@@ -44,21 +47,23 @@ the previous edition. Each quadrant links to a filterable table with every
 entry's rationale, so the "why" behind each placement is always one click
 away.
 
+![Quadrant summary cards listing each entry per ring, with movement markers and links to the detail view](/documentation/tech-radar-2.png)
+
 ## Updating the radar
 
 In the [dev environment](https://github.com/naira-project/naira/blob/main/deploy/dev/stacks/core/infra/kubernetes/catalog.yaml),
 the config is mounted from the `tech-radar-config` ConfigMap. The ConfigMap is
-mounted as a directory — not via `subPath` — so edits propagate into the
+mounted as a directory, not via `subPath`, so edits propagate into the
 running pod (the kubelet syncs it within about a minute).
 
 1. Edit the config: `kubectl -n idp-system edit configmap tech-radar-config`.
 2. Wait for the kubelet to sync the mounted file (~1 min).
 3. Trigger a sync from the portal's Plugins page, or
-   `POST /v1/tech-radar:run` (or `POST /v1/plugins:run`).
+   `POST /v1/plugins/tech-radar:run` (or `POST /v1/plugins:run`).
 4. Reload the **Tech Radar** page in the portal.
 
 If the sync fails, the operation on the Plugins page shows the validation
-errors; the previously synced radar keeps rendering until a valid config
+errors. The previously synced radar keeps rendering until a valid config
 syncs successfully.
 
 Because the radar is driven by a plain mounted file, the mechanism composes
@@ -77,8 +82,8 @@ and let your delivery pipeline update the ConfigMap.
 | `radar.edition` | yes | Free-form edition label, e.g. `2026-09`. |
 | `radar.owner` | yes | Owning team or board. |
 | `quadrants` | yes | Exactly **4** quadrants, in display order. Each has `id` and `name`. |
-| `rings` | yes | 1–6 rings, ordered **innermost to outermost**. Each has `id`, `name`, and an optional `description`. |
-| `entries` | yes | The radar entries. Must be present — use `[]` for a radar without entries; omitting the key is a validation error, so an accidentally deleted block cannot silently wipe the radar. |
+| `rings` | yes | 1-6 rings, ordered **innermost to outermost**. Each has `id`, `name`, and an optional `description`. |
+| `entries` | yes | The radar entries. Must be present; use `[]` for a radar without entries. Omitting the key is a validation error, so an accidentally deleted block cannot silently wipe the radar. |
 | `entries[].id` | yes | Stable identifier; with `radar.id` it forms the node path. |
 | `entries[].name` | yes | Display name. |
 | `entries[].quadrant` | yes | Must match a declared quadrant `id`. |
@@ -88,13 +93,13 @@ and let your delivery pipeline update the ConfigMap.
 | `entries[].rationale` | yes | Why the entry sits in its ring. |
 
 All `id` fields must match `^[a-z0-9][a-z0-9_-]*$` and be at most 100
-characters; ids become node paths, so oversized ids are rejected rather than
+characters. Ids become node paths, so oversized ids are rejected rather than
 clipped. Unknown fields are rejected, so typos surface as validation errors
 instead of being silently ignored. Entry order in the file is canonical: it
 drives the numbering on the radar chart and in the quadrant summaries.
 
 Free-form text is clipped rather than rejected, so an oversized value never
-blocks a sync: short labels (titles, names, owners, the edition) are capped at
+blocks a sync. Short labels (titles, names, owners, the edition) are capped at
 200 characters and long-form text (an entry's rationale, a ring's description)
 at 2000, each with a trailing ellipsis and a warning in the plugin log.
 
@@ -151,5 +156,5 @@ entries:
 ## Out of scope
 
 In-portal editing, historic editions, enforcement of radar decisions, multiple
-radars per instance, and Git-based config sync are all out of scope for now —
-the mounted-file mechanism composes with any external GitOps tooling.
+radars per instance, and Git-based config sync are all out of scope for now.
+The mounted-file mechanism composes with any external GitOps tooling.
