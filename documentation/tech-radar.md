@@ -51,16 +51,20 @@ away.
 
 ## Updating the radar
 
-In the [dev environment](https://github.com/naira-project/naira/blob/main/deploy/dev/stacks/core/infra/kubernetes/catalog.yaml),
-the config is mounted from the `tech-radar-config` ConfigMap. The ConfigMap is
-mounted as a directory, not via `subPath`, so edits propagate into the
-running pod (the kubelet syncs it within about a minute).
+The Helm chart mounts the config from the `plugin-tech-radar-config`
+ConfigMap, set by `catalog.plugins.tech-radar.config` (see the chart's
+[plugins section](https://github.com/naira-project/naira/tree/main/deploy/charts/naira#plugins)).
+In the local dev environment, the config is in
+[`deploy/charts/naira/values-dev.yaml`](https://github.com/naira-project/naira/blob/main/deploy/charts/naira/values-dev.yaml).
 
-1. Edit the config: `kubectl -n idp-system edit configmap tech-radar-config`.
-2. Wait for the kubelet to sync the mounted file (~1 min).
-3. Trigger a sync from the portal's Plugins page, or
+1. With `tilt up` running, edit `radar.yaml` under
+   `catalog.plugins.tech-radar.config.data` and save. Tilt applies the
+   ConfigMap and restarts the catalog pod.
+2. Once the catalog pod is ready, trigger a sync from the portal's Plugins page, or
    `POST /v1/plugins/tech-radar:run` (or `POST /v1/plugins:run`).
-4. Reload the **Tech Radar** page in the portal.
+3. Reload the **Tech Radar** page in the portal.
+
+A `kubectl edit` of the ConfigMap lasts only until Tilt next applies the chart.
 
 If the sync fails, the operation on the Plugins page shows the validation
 errors. The previously synced radar keeps rendering until a valid config
