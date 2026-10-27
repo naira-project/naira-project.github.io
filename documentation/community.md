@@ -4,7 +4,7 @@ The Naira community is the heart of our platform's development. We believe in fo
 
 ## GitHub Discussions
 
-We have enabled [GitHub Discussions](https://github.com/naira-project/naira/discussions). This is a space where you can connect with other users, ask questions, and share feedback about OpenMFP.
+We have enabled [GitHub Discussions](https://github.com/naira-project/naira/discussions). This is a space where you can connect with other users, ask questions, and share feedback about Naira.
 
 ### How to Participate:
 

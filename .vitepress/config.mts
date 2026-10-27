@@ -92,11 +92,38 @@ export default withMermaid({
     sidebar: {
       "/documentation/": [
         {
-          text: "Documentation",
+          text: "Start here",
           items: [
             { text: "Introduction", link: "/documentation/" },
+            { text: "Getting Started", link: "/documentation/getting-started" },
             { text: "Concepts", link: "/documentation/concepts" },
+            { text: "Architecture", link: "/documentation/architecture" },
+          ],
+        },
+        {
+          text: "Using Naira",
+          items: [
+            { text: "The Portal", link: "/documentation/portal" },
             { text: "Tech Radar", link: "/documentation/tech-radar" },
+            { text: "Catalog API", link: "/documentation/api" },
+          ],
+        },
+        {
+          text: "Plugins",
+          items: [
+            { text: "Plugins", link: "/documentation/plugins" },
+            { text: "Writing a Plugin", link: "/documentation/plugin-authoring" },
+          ],
+        },
+        {
+          text: "Operating Naira",
+          items: [
+            { text: "Deployment", link: "/documentation/deployment" },
+          ],
+        },
+        {
+          text: "Project",
+          items: [
             { text: "Contribute", link: "/documentation/contribute" },
             { text: "Community", link: "/documentation/community" },
           ],

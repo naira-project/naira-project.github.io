@@ -9,8 +9,11 @@ auditable through whatever review process already owns the file.
 
 ![The Tech Radar overview: entries plotted across four quadrants and the adopt, trial, assess, and hold rings](/documentation/tech-radar-1.png)
 
-The radar deliberately carries **no links into the catalog**. It expresses the
-organization's *target vision*, not what is currently deployed or in use.
+The radar expresses the organization's *target vision*, not what is currently
+deployed or in use. Entries can still point at the catalog: an entry's optional
+`catalog_refs` describe which models and inference endpoints it is about, and
+the portal resolves them at read time. See
+[Linking entries to the catalog](#linking-entries-to-the-catalog).
 
 ## How it works
 
@@ -45,9 +48,60 @@ Open **Tech Radar** in the portal. The overview shows the radar circle, the
 ring definitions, the edition label, and the count of entries that moved since
 the previous edition. Each quadrant links to a filterable table with every
 entry's rationale, so the "why" behind each placement is always one click
-away.
+away. The table's **In catalog** column lists the models and inference
+endpoints matched by the entry's `catalog_refs`, each linking to its catalog
+detail page.
 
 ![Quadrant summary cards listing each entry per ring, with movement markers and links to the detail view](/documentation/tech-radar-2.png)
+
+## Linking entries to the catalog
+
+An entry can declare which catalog nodes it is about through `catalog_refs`.
+The radar file keeps no node names, only matching rules, so the links follow
+the catalog as plugins add and remove nodes.
+
+```yaml
+entries:
+  - id: claude-sonnet
+    name: Claude Sonnet
+    quadrant: models
+    ring: adopt
+    owner: ml-platform
+    rationale: Default general-purpose model.
+    catalog_refs:
+      - match: claude-sonnet
+        kinds: [model, inference_endpoint]
+      - kinds: [model]
+        plugins: [bedrock]
+```
+
+A node matches a ref when every field of the ref matches it:
+
+- `kinds` is required and lists the node kinds the ref applies to.
+- `match` is compared case-insensitively as a substring of the node path.
+  `claude-sonnet` therefore finds `litellm/claude-sonnet-4` as well as
+  `bedrock/anthropic.claude-sonnet-4-...`, and older versions of the model
+  along with the current one.
+- `plugins` lists the plugin names, as configured in the Helm chart, that
+  must have reported the node. The second ref above links every model the
+  `bedrock` plugin reports, regardless of path.
+- A ref needs `match`, `plugins`, or both. A ref with only `kinds` is
+  rejected by the plugin, so an incomplete ref can never link an entry to
+  every node of a kind.
+
+An entry matches a node when any of its refs matches it.
+
+The portal resolves the refs when the page is loaded. On the quadrant table,
+the **In catalog** column lists the matched nodes grouped by kind, with
+**Models** and **Endpoints** first and other kinds after them, each linking
+to the node's detail page. On a node's detail page, the entries that match
+it appear as badges with the entry's name and ring, each linking to the
+entry's quadrant, so a model page shows at a glance whether the organization
+has decided to adopt or hold it. Matching happens on the first 1000 nodes of
+each referenced kind.
+
+The plugin stores the refs as a JSON property, `catalog_refs`, on the
+`tech_radar_entry` node and emits no relations for them.
 
 ## Updating the radar
 
@@ -95,12 +149,21 @@ and let your delivery pipeline update the ConfigMap.
 | `entries[].moved` | no | `in`, `out`, or `none` (default). Movement since the previous edition. |
 | `entries[].owner` | yes | Team accountable for the decision. |
 | `entries[].rationale` | yes | Why the entry sits in its ring. |
+| `entries[].catalog_refs` | no | List of refs linking the entry to catalog nodes. A node matches a ref when all of the ref's fields match it. Each ref needs `match`, `plugins`, or both. |
+| `entries[].catalog_refs[].match` | no | Matched case-insensitively as a substring of the node path, so one ref finds a model under every provider serving it. At most 200 characters. |
+| `entries[].catalog_refs[].kinds` | yes | Node kinds to match, for example `[model, inference_endpoint]`. |
+| `entries[].catalog_refs[].plugins` | no | Names of the plugins that emitted the node, as configured in this deployment, for example `[litellm]`. |
 
 All `id` fields must match `^[a-z0-9][a-z0-9_-]*$` and be at most 100
 characters. Ids become node paths, so oversized ids are rejected rather than
 clipped. Unknown fields are rejected, so typos surface as validation errors
 instead of being silently ignored. Entry order in the file is canonical: it
-drives the numbering on the radar chart and in the quadrant summaries.
+drives the numbering on the radar chart and in the quadrant summaries. Values
+in `catalog_refs` must not have leading or trailing whitespace, and refs and
+list items must be unique within an entry.
+
+The plugin's [`sample_config.yaml`](https://github.com/naira-project/naira/blob/main/plugins/cmd/tech_radar/sample_config.yaml)
+is parsed by its tests, so it is always a valid, current example of the schema.
 
 Free-form text is clipped rather than rejected, so an oversized value never
 blocks a sync. Short labels (titles, names, owners, the edition) are capped at
@@ -147,6 +210,10 @@ entries:
     owner: ml-platform
     rationale: >
       Default general-purpose model; served through the central gateway.
+    catalog_refs:            # optional; links the entry to catalog nodes
+      - match: claude-sonnet # substring of the node path, case-insensitive
+        kinds: [model, inference_endpoint]
+        plugins: [litellm]   # optional; only nodes from these plugins
   - id: naive-rag
     name: Naive RAG
     quadrant: knowledge
@@ -162,3 +229,6 @@ entries:
 In-portal editing, historic editions, enforcement of radar decisions, multiple
 radars per instance, and Git-based config sync are all out of scope for now.
 The mounted-file mechanism composes with any external GitOps tooling.
+
+The plugin's [README](https://github.com/naira-project/naira/tree/main/plugins/cmd/tech_radar)
+documents its environment variables, and the chart README its Helm values.
