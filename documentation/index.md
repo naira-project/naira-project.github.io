@@ -1,46 +1,56 @@
 # Introduction
 
-Naira is an open-source AI Engineering Hub that connects existing AI tools into one place to discover, govern, and operate the AI assets and services that power your products, models, datasets, inference endpoints, and integrations.
-It does not replace the systems where AI work happens. Instead, it makes the AI engineering landscape understandable, connected, and actionable for the platform, application, and AI engineering teams who build and run AI-enabled software in production.
+Naira is an open-source AI Engineering Hub. It connects the tools where AI work already happens into one catalog, so teams can discover, understand and operate the models, inference endpoints, datasets, MCP servers and applications that make up their AI landscape.
+
+Naira does not replace those tools. It reads from them through plugins, stores what it finds as a graph of assets and relationships, and shows that graph in a portal built for platform, application and AI engineering teams.
 
 :::info
-Naira is an early preview version, designed to provide a demo environment and showcase the Naira Portal for exploring the hub and offering valuable feedback. Please note that it is not yet complete and is still under active development. Your feedback is essential in helping us refine and improve it.
+Naira is in an alpha stage. APIs, data models and concepts may change on short notice, including breaking changes. The project is under active development and your feedback shapes where it goes. The [Getting Started](/documentation/getting-started) guide brings up a complete local environment in a few minutes.
 :::
 
 ## Why an AI Engineering Hub?
 
-AI engineering today is fragmented. Teams building AI-enabled products navigate two handfuls of tools for standard software development, then add another one or two dozen specialized tools for AI work: experiment trackers, model registries, inference platforms, observability, caches, usage optimizations, and gateway configurations. Each tool holds a piece of the picture. None holds the whole thing.
+AI engineering today is fragmented. Teams building AI-enabled products navigate the usual software delivery tooling, then add a growing set of specialized tools for AI work: experiment trackers, model registries, inference platforms, AI gateways, MCP servers, observability stacks and cost dashboards. Each tool holds a piece of the picture. None holds the whole thing.
 
-This creates real costs. AI engineers train models that platform engineers can't find. Application developers integrate inference endpoints without knowing their detailed profiles or SLA. Nobody has a clear view of which models are actually in use, by whom, and how they perform. Security teams struggle to audit AI resource access across a patchwork of systems. And as regulations like the EU AI Act take effect, organizations need a transparency they simply don't have.
+This creates real costs. AI engineers train models that platform engineers cannot find. Application developers integrate inference endpoints without knowing their profile or SLA. Nobody has a clear view of which models are actually in use, by whom, and how they perform. Security teams struggle to audit AI resource access across a patchwork of systems. And as regulations like the EU AI Act take effect, organizations need a transparency they simply do not have.
 
-The result is knowledge silos, duplicated effort, unclear ownership, and slower time-to-value for AI products.
-Naira addresses this not by becoming yet another place to do all the work, but by connecting the tools where AI work already happens into one shared engineering experience.
+The result is knowledge silos, duplicated effort, unclear ownership and slower time-to-value for AI products. Naira addresses this not by becoming yet another place to do the work, but by connecting the places where the work already happens.
 
-### What Naira Does
+## What Naira does today
 
-Naira brings these fragmented worlds together into one coherent platform experience. It is purpose-built for the AI engineering lifecycle, not retrofitted from a general-purpose developer portal.
+**A catalog of AI assets and their relationships.** Plugins scan systems such as LiteLLM, MLflow, OpenMetadata, FluxCD, GitHub, AWS Bedrock and MCP servers, and report what they find as nodes and relations. The catalog merges those reports into one graph, keeping track of which plugin said what. See [Concepts](/documentation/concepts).
 
-The goal is not to move everything into a new monolith. Every information stays in its domain. Naira connects these pieces so teams can understand how they relate and turning disconnected metadata into engineering context.
+**Catalogs per asset type.** The portal shows dedicated catalogs for models, inference endpoints, datasets, MCP servers and the software running in the cluster. Every entry has a detail page with its properties, its neighbours in the graph and, for inference endpoints, usage metrics. See [The Portal](/documentation/portal).
 
-**Discover and manage AI assets.** Naira provides unified registries views for models, datasets, Model Context Protocol (MCP) integrations, and inference endpoints. Every AI asset is cataloged with its metadata, ownership, health status, and relationships to other assets.
+**A governance view.** The Tech Radar shows which technologies the organization has decided to adopt, trial, assess or hold, driven by a reviewed YAML file and linked to the catalog entries it talks about. See [Tech Radar](/documentation/tech-radar).
 
-**Orchestrate platform workflows.** From webhook ingestion to event processing to real-time dashboards, Naira provides an opinionated but extensible architecture for the data flows that power AI platforms. Golden path templates accelerate delivery while ensuring consistency across teams.
+**An API for everything in the catalog.** Nodes, relations, kinds, plugins and plugin runs are available through an authenticated HTTP API. See [Catalog API](/documentation/api).
 
-**Improve reliability and governance.** AI-native observability goes beyond traditional metrics. Naira consumes data on inference latency, model performance trends, token usage, and cost using OpenTelemetry instrumentation across every service. Fine-grained access control through OpenFGA ensures that the right people have access to the right resources, with a full audit trail.
+**A Helm chart and a local development environment.** Naira installs with one chart next to the systems it reads from. A kind cluster with Tilt brings up everything, including sample dependencies, for development and evaluation. See [Deployment](/documentation/deployment) and [Getting Started](/documentation/getting-started).
 
-**Accelerate delivery.** Reusable application templates, a unified service catalog and a micro-frontend dashboard reduce the cognitive load on engineers. Instead of context-switching between tools, teams work from a single pane of glass.
+## Where Naira is heading
 
-**Avoid lock-in.** Naira integrates best-of-breed tools rather than replacing them. It works with your existing model providers, observability stack, and CI/CD pipelines. The CRD-first architecture means your AI asset definitions live in Kubernetes alongside everything else you manage declaratively.
+The catalog is the foundation. On top of it, Naira aims to provide:
 
-### Who Naira Is For
-Naira serves multiple personas, each with distinct needs:
-- AI Engineers manage the full model lifecycle —> from registration and experimentation through deployment and monitoring. Naira gives them a model registry, an inference service catalog, and performance monitoring, all in one place. As well as the unified starting point to fine-tune models, build RAG systems or see direct effects of enhancing AI systems with new components.
-- Software Engineers integrate AI capabilities into applications. They discover available models and inference endpoints through the service catalog, consume them through a unified AI API Gateway, and treat AI services as reliable dependencies with clear SLAs.
-- Application Product Owners need visibility into how AI is being used across their products. Naira provides usage metrics, cost breakdowns, and performance trends without requiring deep technical expertise.
-- Platform Engineers design and operate the underlying infrastructure. Naira's Kubernetes-native architecture, Platform Mesh integration, and multi-tenant control planes give them the tools to manage AI infrastructure at scale.
-- Plugin Providers extend Naira to new systems. Because the AI tooling landscape changes quickly, plugins let teams and communities connect additional tools, guided by clear expectations for metadata, documentation, lifecycle, ownership, and trust, so the hub stays coherent as it grows.
+- **Orchestrated platform workflows.** Golden path templates and reusable application templates that accelerate delivery while keeping teams consistent.
+- **Reliability and governance.** AI-native observability covering inference latency, model performance trends, token usage and cost, and fine-grained access control with a full audit trail.
+- **A plugin ecosystem.** A place where vendors and communities publish and maintain plugins for their tools, with clear expectations for metadata, lifecycle, ownership and trust.
+- **Documentation in context.** Model cards, dataset cards, READMEs and runbooks shown next to the assets they describe.
 
-### What Naira Is Not
-Being clear about scope matters as much as describing capabilities. Naira is not a model training platform, a notebook environment, a RAG builder, or an AI studio where users author every application directly. And, most importantly, it is not a replacement for specialized systems such as model registries, data catalogs, inference runtimes, AI gateways, observability stacks, GitOps tools, or documentation platforms.
+Proposals and decisions for these topics live in the [architecture repository](https://github.com/naira-project/architecture) as RFCs, ADRs and DDRs.
 
-The best AI engineering environments are not built by forcing every team into a single tool. They are built by connecting the right tools with the right context and that is exactly what Naira sets out to do.
+Naira is built with and for the cloud-native ecosystem. It integrates closely with [OpenMFP](https://openmfp.org/) for the portal and is designed to work with [Platform Mesh](https://platform-mesh.io/main/), [kcp](https://github.com/kcp-dev/kcp) and other components of the NeoNephos stack.
+
+## Who Naira is for
+
+- **AI Engineers** manage the model lifecycle from registration and experimentation through deployment and monitoring. Naira gives them a model registry view, an inference endpoint catalog and usage metrics in one place.
+- **Software Engineers** integrate AI capabilities into applications. They discover available models, endpoints and MCP tools through the catalog and see how their deployments relate to them.
+- **Application Product Owners** need visibility into how AI is used across their products: which models are in use, by which services, and how they perform.
+- **Platform Engineers** design and operate the underlying infrastructure. Naira's Kubernetes-native architecture and Helm chart fit into the platforms they already run.
+- **Plugin Providers** extend Naira to new systems. Because the AI tooling landscape changes quickly, plugins let teams and communities connect additional tools without changes to the core.
+
+## What Naira is not
+
+Being clear about scope matters as much as describing capabilities. Naira is not a model training platform, a notebook environment, a RAG builder or an AI studio where users author applications directly. Most importantly, it is not a replacement for specialized systems such as model registries, data catalogs, inference runtimes, AI gateways, observability stacks, GitOps tools or documentation platforms.
+
+The best AI engineering environments are not built by forcing every team into a single tool. They are built by connecting the right tools with the right context, and that is exactly what Naira sets out to do.
