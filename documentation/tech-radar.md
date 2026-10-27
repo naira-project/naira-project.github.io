@@ -12,8 +12,8 @@ auditable through whatever review process already owns the file.
 The radar expresses the organization's *target vision*, not what is currently
 deployed or in use. Entries can still point at the catalog: an entry's optional
 `catalog_refs` describe which models and inference endpoints it is about, and
-the portal resolves them at read time. The radar itself emits no relations, so
-links stay current as models come and go without touching the radar file.
+the portal resolves them at read time. See
+[Linking entries to the catalog](#linking-entries-to-the-catalog).
 
 ## How it works
 
@@ -53,6 +53,55 @@ endpoints matched by the entry's `catalog_refs`, each linking to its catalog
 detail page.
 
 ![Quadrant summary cards listing each entry per ring, with movement markers and links to the detail view](/documentation/tech-radar-2.png)
+
+## Linking entries to the catalog
+
+An entry can declare which catalog nodes it is about through `catalog_refs`.
+The radar file keeps no node names, only matching rules, so the links follow
+the catalog as plugins add and remove nodes.
+
+```yaml
+entries:
+  - id: claude-sonnet
+    name: Claude Sonnet
+    quadrant: models
+    ring: adopt
+    owner: ml-platform
+    rationale: Default general-purpose model.
+    catalog_refs:
+      - match: claude-sonnet
+        kinds: [model, inference_endpoint]
+      - kinds: [model]
+        plugins: [bedrock]
+```
+
+A node matches a ref when every field of the ref matches it:
+
+- `kinds` is required and lists the node kinds the ref applies to.
+- `match` is compared case-insensitively as a substring of the node path.
+  `claude-sonnet` therefore finds `litellm/claude-sonnet-4` as well as
+  `bedrock/anthropic.claude-sonnet-4-...`, and older versions of the model
+  along with the current one.
+- `plugins` lists the plugin names, as configured in the Helm chart, that
+  must have reported the node. The second ref above links every model the
+  `bedrock` plugin reports, regardless of path.
+- A ref needs `match`, `plugins`, or both. A ref with only `kinds` is
+  rejected by the plugin, so an incomplete ref can never link an entry to
+  every node of a kind.
+
+An entry matches a node when any of its refs matches it.
+
+The portal resolves the refs when the page is loaded. On the quadrant table,
+the **In catalog** column lists the matched nodes grouped by kind, with
+**Models** and **Endpoints** first and other kinds after them, each linking
+to the node's detail page. On a node's detail page, the entries that match
+it appear as badges with the entry's name and ring, each linking to the
+entry's quadrant, so a model page shows at a glance whether the organization
+has decided to adopt or hold it. Matching happens on the first 1000 nodes of
+each referenced kind.
+
+The plugin stores the refs as a JSON property, `catalog_refs`, on the
+`tech_radar_entry` node and emits no relations for them.
 
 ## Updating the radar
 
