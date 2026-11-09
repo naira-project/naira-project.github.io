@@ -24,7 +24,8 @@ function buildBlogSidebar() {
 // https://vitepress.dev/reference/site-config
 export default withMermaid({
   title: "Naira",
-  description: "The open source internal development platform to enable organizations building AI first platforms",
+  description:
+    "The open source internal development platform to enable organizations building AI first platforms",
   head: [["link", { rel: "icon", href: "favicon.ico" }]],
   ignoreDeadLinks: "localhostLinks",
   cleanUrls: true,
@@ -51,15 +52,11 @@ export default withMermaid({
       alias: [
         {
           find: /^.*\/VPFooter\.vue$/,
-          replacement: fileURLToPath(
-            new URL("theme/components/VPFooter.vue", import.meta.url),
-          ),
+          replacement: fileURLToPath(new URL("theme/components/VPFooter.vue", import.meta.url)),
         },
         {
           find: /^.*\/VPFeature\.vue$/,
-          replacement: fileURLToPath(
-            new URL("theme/components/VPFeature.vue", import.meta.url),
-          ),
+          replacement: fileURLToPath(new URL("theme/components/VPFeature.vue", import.meta.url)),
         },
       ],
     },

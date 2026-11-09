@@ -1,4 +1,4 @@
-import { createContentLoader, type ContentData } from "vitepress";
+import { type ContentData, createContentLoader } from "vitepress";
 
 export interface Post {
   url: string;
@@ -29,9 +29,7 @@ function formatDate(d: Date): string {
 
 function toPost({ url, frontmatter, excerpt }: ContentData): Post {
   const date = parseDate(frontmatter.date);
-  const tags = Array.isArray(frontmatter.tags)
-    ? frontmatter.tags.map(String)
-    : [];
+  const tags = Array.isArray(frontmatter.tags) ? frontmatter.tags.map(String) : [];
   return {
     url,
     title: frontmatter.title ?? "Untitled",
@@ -50,9 +48,7 @@ export function blogLoader() {
   return createContentLoader("blog/posts/*.md", {
     excerpt: true,
     transform(rawData): Post[] {
-      return rawData
-        .map(toPost)
-        .sort((a, b) => +new Date(b.date) - +new Date(a.date));
+      return rawData.map(toPost).sort((a, b) => +new Date(b.date) - +new Date(a.date));
     },
   });
 }

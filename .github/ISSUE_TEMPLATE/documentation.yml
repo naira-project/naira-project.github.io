@@ -1,7 +1,7 @@
 name: Documentation Improvement
 description: Report missing, incorrect, or unclear documentation
 title: "[Docs]: "
-labels: ["documentation", "triage"]
+labels: [ "documentation", "triage" ]
 body:
   - type: markdown
     attributes:

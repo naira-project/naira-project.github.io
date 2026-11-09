@@ -1,7 +1,7 @@
 name: Bug Report
 description: Report a bug in Naira
 title: "[Bug]: "
-labels: ["bug", "triage"]
+labels: [ "bug", "triage" ]
 body:
   - type: markdown
     attributes:

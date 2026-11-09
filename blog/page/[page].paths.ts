@@ -1,5 +1,5 @@
-import { readAllPosts } from "../../.vitepress/blog-posts-fs";
 import { POSTS_PER_PAGE } from "../../.vitepress/blog-config";
+import { readAllPosts } from "../../.vitepress/blog-posts-fs";
 
 export default {
   paths() {

@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - main
-      - 'release-*'  # Support version branches
+      - "release-*" # Support version branches
   pull_request:
     branches:
       - main
@@ -25,7 +25,6 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-
   build:
     runs-on: ubuntu-latest
     steps:

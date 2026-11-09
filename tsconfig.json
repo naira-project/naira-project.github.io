@@ -12,6 +12,12 @@
     "verbatimModuleSyntax": true,
     "types": ["node"]
   },
-  "include": [".vitepress/**/*.ts", ".vitepress/**/*.mts", ".vitepress/**/*.vue", ".vitepress/**/*.d.ts", "blog/**/*.ts"],
+  "include": [
+    ".vitepress/**/*.ts",
+    ".vitepress/**/*.mts",
+    ".vitepress/**/*.vue",
+    ".vitepress/**/*.d.ts",
+    "blog/**/*.ts"
+  ],
   "exclude": ["node_modules", ".vitepress/dist"]
 }

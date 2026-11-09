@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { computed, h } from "vue";
 import { useData } from "vitepress";
 import DefaultTheme from "vitepress/theme";
+import { computed, h } from "vue";
 import PostHeader from "./components/PostHeader.vue";
 import PostNav from "./components/PostNav.vue";
 
