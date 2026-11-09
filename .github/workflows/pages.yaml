@@ -51,6 +51,7 @@ jobs:
 
       - run: npm ci
       - run: npm run typecheck
+      - run: npx biome ci --reporter=github .
       - run: npm run build
         env:
           DOCS_VERSION: ${{ steps.set-version.outputs.version }}
