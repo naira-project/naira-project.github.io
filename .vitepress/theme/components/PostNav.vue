@@ -13,6 +13,8 @@ const currentIndex = computed(() => {
 });
 
 const newer = computed(() => {
+
+  
   const i = currentIndex.value;
   return i > 0 ? posts[i - 1] : null;
 });
