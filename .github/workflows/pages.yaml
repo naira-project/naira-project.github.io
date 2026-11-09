@@ -51,6 +51,7 @@ jobs:
           fi
 
       - run: npm ci
+      - run: npm run typecheck
       - run: npm run build
         env:
           DOCS_VERSION: ${{ steps.set-version.outputs.version }}
