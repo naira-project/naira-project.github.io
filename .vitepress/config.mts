@@ -6,18 +6,22 @@ function buildBlogSidebar() {
   const posts = readAllPosts();
   const byYear = new Map<string, { text: string; link: string }[]>();
   for (const post of posts) {
-    if (!byYear.has(post.year)) byYear.set(post.year, []);
-    byYear.get(post.year)!.push({
+    let yearPosts = byYear.get(post.year);
+    if (!yearPosts) {
+      yearPosts = [];
+      byYear.set(post.year, yearPosts);
+    }
+    yearPosts.push({
       text: post.title,
       link: `/blog/posts/${post.slug}`,
     });
   }
-  return [...byYear.keys()]
-    .sort((a, b) => Number(b) - Number(a))
-    .map((year) => ({
+  return [...byYear]
+    .sort(([yearA], [yearB]) => Number(yearB) - Number(yearA))
+    .map(([year, items]) => ({
       text: year,
       collapsed: false,
-      items: byYear.get(year)!,
+      items,
     }));
 }
 
@@ -30,10 +34,10 @@ export default withMermaid({
   ignoreDeadLinks: "localhostLinks",
   cleanUrls: true,
   base:
-    "DOCS_VERSION" in process.env && process.env.DOCS_VERSION != ""
-      ? "/" + process.env.DOCS_VERSION + "/"
-      : "PAGES_BASE" in process.env && process.env.PAGES_BASE != ""
-        ? "/" + process.env.PAGES_BASE + "/"
+    "DOCS_VERSION" in process.env && process.env.DOCS_VERSION !== ""
+      ? `/${process.env.DOCS_VERSION}/`
+      : "PAGES_BASE" in process.env && process.env.PAGES_BASE !== ""
+        ? `/${process.env.PAGES_BASE}/`
         : "/",
 
   srcExclude: ["**/README.md", "**/CONTRIBUTING.md"],

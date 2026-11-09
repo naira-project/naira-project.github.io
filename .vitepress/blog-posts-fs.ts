@@ -21,12 +21,12 @@ function parseFrontmatter(raw: string): Record<string, unknown> {
   let listKey: string | null = null;
   let listValues: string[] | null = null;
   for (const line of lines) {
-    if (listKey && /^\s+-\s+/.test(line)) {
+    if (listKey && listValues && /^\s+-\s+/.test(line)) {
       const v = line
         .replace(/^\s+-\s+/, "")
         .trim()
         .replace(/^["']|["']$/g, "");
-      listValues!.push(v);
+      listValues.push(v);
       continue;
     }
     const m = line.match(/^([A-Za-z0-9_-]+):\s*(.*)$/);
