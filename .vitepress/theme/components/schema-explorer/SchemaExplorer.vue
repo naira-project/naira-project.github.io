@@ -29,7 +29,7 @@ const pluginGroups: PluginGroup[] = Array.from(
     groups.set(plugin.group, group)
     return groups
   }, new Map<string, PluginGroup>()).values(),
-)
+).sort((a, b) => Number(a.id === FALLBACK_GROUP) - Number(b.id === FALLBACK_GROUP))
 
 const nodes: GraphNode[] = Array.from(
   pluginGraph.plugins.reduce((kinds, plugin) => {
