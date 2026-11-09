@@ -3,9 +3,12 @@
     "dev": "vitepress dev",
     "build": "vitepress build",
     "typecheck": "vue-tsc --noEmit",
+    "check": "npm run typecheck && biome check .",
+    "fix": "biome check --write .",
     "preview": "vitepress preview"
   },
   "devDependencies": {
+    "@biomejs/biome": "2.6.6",
     "@types/node": "^26.6.6",
     "mermaid": "^11.16.1",
     "typescript": "^6.0.3",
