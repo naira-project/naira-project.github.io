@@ -1,4 +1,5 @@
-import { GraphRelation, NODE_H, NODE_W, Point } from './graphLayout'
+import { HALF_W, NODE_H, edgeKey } from './graphLayout'
+import type { GraphRelation, Point } from './graphLayout'
 
 export type PositionedNode = { kind: string; x: number; y: number }
 export type RoutedEdge = {
@@ -16,15 +17,20 @@ type PreparedEdge = {
   from: Point
   to: Point
   lane: { offset: number }
-  route?: Point[]
+  route: Point[] | null
   outPort: number
   inPort: number
 }
 
-const HALF_W = NODE_W / 2
 const HALF_H = NODE_H / 2
 const LABEL_FRACTIONS = [0.5, 0.42, 0.58, 0.34, 0.66, 0.26, 0.74, 0.18, 0.82, 0.12, 0.88]
-const edgeKey = (from: string, to: string) => `${from}\u0000${to}`
+const CHAR_W = 3.4
+const LABEL_PAD = 6
+const LABEL_HEIGHT = 9
+const NODE_OVERLAP_PAD = 4
+const PLACED_LABEL_PAD = 3
+const OVERLAP_SCORE = 10
+const EDGE_CROSSING_SCORE = 1
 const portOffset = (count: number, index: number) => (count <= 1 ? 0 : (index - (count - 1) / 2) * Math.min(16, 34 / (count - 1)))
 const rectsOverlap = (a: Rect, b: Rect, pad = 0) => a.x0 < b.x1 + pad && a.x1 > b.x0 - pad && a.y0 < b.y1 + pad && a.y1 > b.y0 - pad
 
@@ -94,19 +100,20 @@ export function routeEdges(
   }
 
   const prepared: PreparedEdge[] = []
-  visibleRelations.forEach((relation, index) => {
+  visibleRelations.forEach((relation) => {
     const from = positions.get(relation.from)
     const to = positions.get(relation.to)
     if (!from || !to) return
-    const lane = lanes.get(relation)!
-    const route = relation.from === relation.to ? undefined : routes.get(edgeKey(relation.from, relation.to))
+    const lane = lanes.get(relation)
+    if (!lane) return
+    const route = relation.from === relation.to ? null : routes.get(edgeKey(relation.from, relation.to)) ?? null
     prepared.push({
       relation,
-      key: `${relation.kind}-${relation.from}-${relation.to}-${index}`,
+      key: `${relation.kind}-${relation.from}-${relation.to}`,
       from,
       to,
       lane,
-      route: route?.map((point) => ({ x: point.x, y: point.y + lane.offset })),
+      route: route?.map((point) => ({ x: point.x, y: point.y + lane.offset })) ?? null,
       outPort: 0,
       inPort: 0,
     })
@@ -116,23 +123,27 @@ export function routeEdges(
   const outgoing = new Map<string, PreparedEdge[]>()
   const incoming = new Map<string, PreparedEdge[]>()
   for (const item of prepared) {
-    if (!item.route) continue
+    if (item.route === null) continue
     outgoing.set(item.relation.from, [...(outgoing.get(item.relation.from) ?? []), item])
     incoming.set(item.relation.to, [...(incoming.get(item.relation.to) ?? []), item])
   }
   outgoing.forEach((group) => {
-    group.sort((a, b) => (a.route![0]?.y ?? a.to.y) - (b.route![0]?.y ?? b.to.y))
+    group.sort((a, b) => (a.route?.[0]?.y ?? a.to.y) - (b.route?.[0]?.y ?? b.to.y))
     group.forEach((item, index) => { item.outPort = portOffset(group.length, index) })
   })
   incoming.forEach((group) => {
-    group.sort((a, b) => (a.route![a.route!.length - 1]?.y ?? a.from.y) - (b.route![b.route!.length - 1]?.y ?? b.from.y))
+    group.sort((a, b) => {
+      const aRoute = a.route
+      const bRoute = b.route
+      return (aRoute?.[aRoute.length - 1]?.y ?? a.from.y) - (bRoute?.[bRoute.length - 1]?.y ?? b.from.y)
+    })
     group.forEach((item, index) => { item.inPort = portOffset(group.length, index) })
   })
 
   const built = prepared.map((item) => {
     const { from, to, lane } = item
     let segments: Segment[]
-    if (item.route) {
+    if (item.route !== null) {
       const anchors: Point[] = [{ x: from.x + HALF_W, y: from.y + item.outPort }]
       // Route edges straight through intermediate columns along their virtual-node lanes.
       for (const waypoint of item.route) anchors.push({ x: waypoint.x - HALF_W, y: waypoint.y }, { x: waypoint.x + HALF_W, y: waypoint.y })
@@ -170,27 +181,22 @@ export function routeEdges(
 
   for (const index of order) {
     const text = built[index].item.relation.kind
-    const halfWidth = text.length * 3.4 + 6
+    const halfWidth = text.length * CHAR_W + LABEL_PAD
     let best: { point: Point; rect: Rect } | null = null
     let bestScore = Infinity
     for (const fraction of LABEL_FRACTIONS) {
       const point = pointAtFraction(samples[index], lengths[index], fraction)
-      const rect = { x0: point.x - halfWidth, x1: point.x + halfWidth, y0: point.y - 9, y1: point.y + 9 }
-      let score = 0
-      for (const nodeRect of nodeRects) if (rectsOverlap(rect, nodeRect, 4)) score += 10
-      for (const other of placed) if (rectsOverlap(rect, other, 3)) score += 10
-      if (score < bestScore) {
-        const crossesOther = samples.some((points, otherIndex) => otherIndex !== index && points.some((sample) => sample.x > rect.x0 && sample.x < rect.x1 && sample.y > rect.y0 && sample.y < rect.y1))
-        if (crossesOther) score += 1
-      }
+      const rect = { x0: point.x - halfWidth, x1: point.x + halfWidth, y0: point.y - LABEL_HEIGHT, y1: point.y + LABEL_HEIGHT }
+      const score = scoreLabel(rect, index, samples, nodeRects, placed)
       if (score < bestScore) {
         best = { point, rect }
         bestScore = score
         if (score === 0) break
       }
     }
-    placed.push(best!.rect)
-    labels[index] = { x: best!.point.x, y: best!.point.y + 4 }
+    if (!best) continue
+    placed.push(best.rect)
+    labels[index] = { x: best.point.x, y: best.point.y + 4 }
   }
 
   return built.map(({ item, segments }, index) => ({
@@ -199,4 +205,17 @@ export function routeEdges(
     d: segmentsToPath(segments),
     label: labels[index],
   }))
+}
+
+function scoreLabel(rect: Rect, edgeIndex: number, samples: Point[][], nodeRects: Rect[], placedLabels: Rect[]) {
+  let score = 0
+  for (const nodeRect of nodeRects) if (rectsOverlap(rect, nodeRect, NODE_OVERLAP_PAD)) score += OVERLAP_SCORE
+  for (const labelRect of placedLabels) if (rectsOverlap(rect, labelRect, PLACED_LABEL_PAD)) score += OVERLAP_SCORE
+  const crossesOtherEdge = samples.some((points, otherIndex) =>
+    otherIndex !== edgeIndex && points.some((point) =>
+      point.x > rect.x0 && point.x < rect.x1 && point.y > rect.y0 && point.y < rect.y1,
+    ),
+  )
+  if (crossesOtherEdge) score += EDGE_CROSSING_SCORE
+  return score
 }

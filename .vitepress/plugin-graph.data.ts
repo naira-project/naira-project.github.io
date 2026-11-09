@@ -39,7 +39,7 @@ export default defineLoader({
     try {
       response = await fetch(PLUGIN_GRAPH_URL, { signal: AbortSignal.timeout(15_000) })
     } catch (error) {
-      throw new Error(`Unable to fetch plugin graph from ${PLUGIN_GRAPH_URL}: ${String(error)}`)
+      throw new Error(`Unable to fetch plugin graph from ${PLUGIN_GRAPH_URL}.`, { cause: error })
     }
     if (!response.ok) {
       throw new Error(`Unable to fetch plugin graph from ${PLUGIN_GRAPH_URL}: HTTP ${response.status} ${response.statusText}`)
@@ -50,7 +50,7 @@ export default defineLoader({
     try {
       parsed = parse(source)
     } catch (error) {
-      throw new Error(`Unable to parse plugin graph YAML from ${PLUGIN_GRAPH_URL}: ${String(error)}`)
+      throw new Error(`Unable to parse plugin graph YAML from ${PLUGIN_GRAPH_URL}.`, { cause: error })
     }
 
     return validatePluginGraph(parsed)

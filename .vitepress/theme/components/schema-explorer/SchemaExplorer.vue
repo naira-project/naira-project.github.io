@@ -1,69 +1,22 @@
 <script setup lang="ts">
-import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
+import { computed, nextTick, ref, watch } from 'vue'
 import { data as pluginGraph } from '../../../plugin-graph.data'
+import { buildGraphModel } from './buildGraphModel'
 import { routeEdges } from './edgeRouting'
 import { computeLayout, NODE_H, NODE_W } from './graphLayout'
-import type { GraphNode, GraphRelation, Point } from './graphLayout'
-import { FALLBACK_GROUP, pluginGroupLabel, pluginPresentation } from './schemaExplorerPresentation'
+import type { GraphNode, Point } from './graphLayout'
 
-type Plugin = { id: string; label: string; short: string; group: string; groupLabel: string }
-type PluginGroup = { id: string; label: string; plugins: string[] }
 type PlacedNode = GraphNode & Point & { activeSources: string[]; badges: string[]; sourceOverflow: number; sourceLabels: string }
 
-const plugins: Plugin[] = pluginGraph.plugins.map(({ plugin: id }) => {
-  const presentation = pluginPresentation[id] ?? {}
-  const group = presentation.group ?? FALLBACK_GROUP
-  return {
-    id,
-    label: presentation.label ?? id,
-    short: presentation.short ?? id.slice(0, 3).toUpperCase(),
-    group,
-    groupLabel: pluginGroupLabel(group),
-  }
-})
-
-const pluginGroups: PluginGroup[] = Array.from(
-  plugins.reduce((groups, plugin) => {
-    const group = groups.get(plugin.group) ?? { id: plugin.group, label: plugin.groupLabel, plugins: [] }
-    group.plugins.push(plugin.id)
-    groups.set(plugin.group, group)
-    return groups
-  }, new Map<string, PluginGroup>()).values(),
-).sort((a, b) => Number(a.id === FALLBACK_GROUP) - Number(b.id === FALLBACK_GROUP))
-
-const nodes: GraphNode[] = Array.from(
-  pluginGraph.plugins.reduce((kinds, plugin) => {
-    for (const kind of plugin.nodes) {
-      const sources = kinds.get(kind)?.sources ?? []
-      if (!sources.includes(plugin.plugin)) sources.push(plugin.plugin)
-      kinds.set(kind, { kind, sources })
-    }
-    return kinds
-  }, new Map<string, GraphNode>()).values(),
-).sort((a, b) => a.kind.localeCompare(b.kind))
-
-const relations: GraphRelation[] = Array.from(
-  pluginGraph.plugins.reduce((relationsByKey, plugin) => {
-    for (const relation of plugin.relations) {
-      const key = `${relation.kind}\u0000${relation.from}\u0000${relation.to}`
-      const existing = relationsByKey.get(key) ?? { ...relation, sources: [] as string[] }
-      if (!existing.sources.includes(plugin.plugin)) existing.sources.push(plugin.plugin)
-      relationsByKey.set(key, existing)
-    }
-    return relationsByKey
-  }, new Map<string, GraphRelation>()).values(),
-).sort((a, b) => a.from.localeCompare(b.from) || a.to.localeCompare(b.to) || a.kind.localeCompare(b.kind))
-
-const layout = computeLayout(nodes, relations)
-
-const isFullscreen = ref(false)
-const zoom = ref(1)
 const MIN_ZOOM = 0.4
 const MAX_ZOOM = 2.5
 const ZOOM_STEP = 0.1
-const fullscreenTrigger = ref<HTMLButtonElement | null>(null)
-const dialogElement = ref<HTMLElement | null>(null)
-const previousFocus = ref<HTMLElement | null>(null)
+const MAX_BADGES = 4
+const { plugins, groups: pluginGroups, nodes, relations } = buildGraphModel(pluginGraph)
+const layout = computeLayout(nodes, relations)
+const dialog = ref<HTMLDialogElement | null>(null)
+const isOpen = ref(false)
+const zoom = ref(1)
 const selected = ref(new Set(plugins.map(({ id }) => id)))
 const focusedNode = ref<string | null>(null)
 const highlightedPlugin = ref<string | null>(null)
@@ -96,8 +49,6 @@ function activeSources(sources: string[]) {
   return sources.filter((source) => selected.value.has(source))
 }
 
-const MAX_BADGES = 4
-
 watch(visibleKinds, (kinds) => {
   if (focusedNode.value && !kinds.has(focusedNode.value)) focusedNode.value = null
 })
@@ -115,7 +66,7 @@ function togglePluginHighlight(id: string) {
   highlightedPlugin.value = highlightedPlugin.value === id ? null : id
 }
 
-function setGroup(group: PluginGroup, shouldSelect: boolean) {
+function setGroup(group: { id: string; label: string; plugins: string[] }, shouldSelect: boolean) {
   const next = new Set(selected.value)
   for (const id of group.plugins) {
     if (shouldSelect) next.add(id)
@@ -124,7 +75,7 @@ function setGroup(group: PluginGroup, shouldSelect: boolean) {
   selected.value = next
 }
 
-function groupIsFullySelected(group: PluginGroup) {
+function groupIsFullySelected(group: { plugins: string[] }) {
   return group.plugins.every((id) => selected.value.has(id))
 }
 
@@ -136,81 +87,27 @@ const visibleEdges = computed(() =>
   routeEdges(visibleRelations.value, visibleNodes.value, layout.positions, layout.routes),
 )
 
-const previousBodyOverflow = ref('')
-
 async function openFullscreen() {
-  previousFocus.value = document.activeElement instanceof HTMLElement ? document.activeElement : null
-  previousBodyOverflow.value = document.body.style.overflow
-  document.body.style.overflow = 'hidden'
-  document.addEventListener('keydown', handleDocumentKeydown, true)
-  isFullscreen.value = true
+  isOpen.value = true
   await nextTick()
-  dialogElement.value?.focus()
+  dialog.value?.showModal()
 }
 
-function handleDocumentKeydown(event: KeyboardEvent) {
-  if (event.key === 'Escape' && isFullscreen.value) {
-    event.preventDefault()
-    closeFullscreen()
-  }
-}
-
-function closeFullscreen() {
-  if (!isFullscreen.value) return
-  isFullscreen.value = false
-  document.removeEventListener('keydown', handleDocumentKeydown, true)
-  document.body.style.overflow = previousBodyOverflow.value
-  requestAnimationFrame(() => {
-    if (previousFocus.value?.isConnected) previousFocus.value.focus()
-    else fullscreenTrigger.value?.focus()
-  })
-}
-
-onBeforeUnmount(() => {
-  document.removeEventListener('keydown', handleDocumentKeydown, true)
-  if (isFullscreen.value) document.body.style.overflow = previousBodyOverflow.value
-})
-
-function trapDialogFocus(event: KeyboardEvent) {
-  if (event.key !== 'Tab' || !dialogElement.value) return
-  const focusable = Array.from(dialogElement.value.querySelectorAll<HTMLElement>(
-    'button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])',
-  )).filter((element) => element.offsetParent !== null)
-  if (!focusable.length) {
-    event.preventDefault()
-    dialogElement.value.focus()
-    return
-  }
-  const first = focusable[0]
-  const last = focusable[focusable.length - 1]
-  if (event.shiftKey && document.activeElement === first) {
-    event.preventDefault()
-    last.focus()
-  } else if (!event.shiftKey && document.activeElement === last) {
-    event.preventDefault()
-    first.focus()
-  }
+function onClose() {
+  isOpen.value = false
 }
 </script>
 
 <template>
   <div class="schema-explorer-root">
     <div class="explorer-toolbar">
-      <button ref="fullscreenTrigger" class="open-fullscreen" type="button" @click="openFullscreen">Open catalog graph in a full-screen</button>
+      <button class="open-fullscreen" type="button" @click="openFullscreen">Open catalog graph in full screen</button>
     </div>
-    <Teleport v-if="isFullscreen" to="body">
-      <div
-        ref="dialogElement"
-        class="explorer-shell fullscreen"
-        role="dialog"
-        aria-modal="true"
-        aria-label="Full-screen catalog graph explorer"
-        tabindex="-1"
-        @keydown="trapDialogFocus"
-      >
+    <dialog ref="dialog" class="explorer-dialog" aria-label="Catalog schema explorer" @close="onClose">
+      <template v-if="isOpen">
         <div class="fullscreen-toolbar">
           <strong>Catalog schema</strong>
-          <button class="close-fullscreen" type="button" aria-label="Close full-screen graph" @click="closeFullscreen">Close ×</button>
+          <button class="close-fullscreen" type="button" aria-label="Close full-screen graph" @click="dialog?.close()">Close ×</button>
         </div>
         <section class="schema-workbench" aria-label="Interactive catalog schema explorer">
           <aside class="plugin-panel">
@@ -223,9 +120,11 @@ function trapDialogFocus(event: KeyboardEvent) {
                 <strong>{{ group.label }}</strong>
                 <button class="group-select" type="button" @click="setGroup(group, !groupIsFullySelected(group))">{{ groupIsFullySelected(group) ? 'Clear' : 'Select all' }}</button>
               </header>
-              <label v-for="id in group.plugins" :key="id" class="plugin-option" :class="{ selected: selected.has(id) }">
-                <input type="checkbox" :checked="selected.has(id)" @change="togglePlugin(id)" />
-                <span class="plugin-label">{{ pluginById.get(id)?.label }}</span>
+              <div v-for="id in group.plugins" :key="id" class="plugin-option" :class="{ selected: selected.has(id) }">
+                <label class="plugin-checkbox">
+                  <input type="checkbox" :checked="selected.has(id)" @change="togglePlugin(id)" />
+                  <span class="plugin-label">{{ pluginById.get(id)?.label }}</span>
+                </label>
                 <button
                   class="plugin-highlight"
                   :class="{ active: highlightedPlugin === id }"
@@ -233,11 +132,11 @@ function trapDialogFocus(event: KeyboardEvent) {
                   :aria-label="`${highlightedPlugin === id ? 'Stop highlighting' : 'Highlight'} ${pluginById.get(id)?.label} nodes and relations`"
                   :aria-pressed="highlightedPlugin === id"
                   :title="`${highlightedPlugin === id ? 'Stop highlighting' : 'Highlight'} nodes and relations from ${pluginById.get(id)?.label}`"
-                  @click.prevent="togglePluginHighlight(id)"
+                  @click="togglePluginHighlight(id)"
                 >
                   {{ highlightedPlugin === id ? '●' : '○' }}
                 </button>
-              </label>
+              </div>
             </section>
             <div class="legend">
               <span class="legend-edge"></span><span>Relation arrow; label shows kind</span>
@@ -266,12 +165,12 @@ function trapDialogFocus(event: KeyboardEvent) {
                 class="graph-svg"
                 :viewBox="`0 0 ${layout.width} ${layout.height}`"
                 :style="{ width: `${layout.width * zoom}px`, height: `${layout.height * zoom}px`, minHeight: 0 }"
-                role="img"
+                role="group"
                 aria-label="Node kinds connected by plugin-provided relations"
               >
                 <defs><marker id="schema-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M 0 0 L 8 4 L 0 8 z" fill="context-stroke" /></marker></defs>
                 <g class="edges">
-                  <g v-for="edge in visibleEdges" :key="edge.key" class="edge-group" :class="{ highlighted: highlightedPlugin && edge.relation.sources.includes(highlightedPlugin) }">
+                  <g v-for="edge in visibleEdges" :key="`${edge.relation.kind}-${edge.relation.from}-${edge.relation.to}`" class="edge-group" :class="{ highlighted: highlightedPlugin && edge.relation.sources.includes(highlightedPlugin) }">
                     <path :d="edge.d" marker-end="url(#schema-arrow)" />
                     <text :x="edge.label.x" :y="edge.label.y">{{ edge.relation.kind }}</text>
                     <title>{{ edge.relation.from }} —{{ edge.relation.kind }}→ {{ edge.relation.to }}; {{ activeSources(edge.relation.sources).map((id) => pluginById.get(id)?.label ?? id).join(', ') }}</title>
@@ -314,8 +213,8 @@ function trapDialogFocus(event: KeyboardEvent) {
             </div>
           </div>
         </section>
-      </div>
-    </Teleport>
+      </template>
+    </dialog>
   </div>
 </template>
 
@@ -323,18 +222,18 @@ function trapDialogFocus(event: KeyboardEvent) {
 .schema-explorer-root { width: 100%; }
 .explorer-toolbar { display: flex; align-items: center; gap: 12px; margin: 0 0 12px; }
 .open-fullscreen, .close-fullscreen { border: 1px solid var(--vp-c-brand-1); border-radius: 7px; padding: 7px 11px; background: var(--vp-c-bg); color: var(--vp-c-brand-1); cursor: pointer; font: 600 .8rem var(--vp-font-family-base); white-space: nowrap; }
-.explorer-shell.fullscreen { position: fixed; inset: 0; z-index: 9999; display: flex; flex-direction: column; gap: 12px; overflow: auto; padding: 16px; background: var(--vp-c-bg); }
+dialog.explorer-dialog { width: 100vw; height: 100vh; max-width: none; max-height: none; margin: 0; border: 0; padding: 16px; background: var(--vp-c-bg); color: var(--vp-c-text-1); }
+dialog.explorer-dialog::backdrop { background: rgb(0 0 0 / 65%); }
+dialog.explorer-dialog[open] { display: flex; flex-direction: column; gap: 12px; overflow: auto; }
 .fullscreen-toolbar { display: flex; flex: 0 0 auto; align-items: center; justify-content: space-between; }
 .close-fullscreen { background: var(--vp-c-brand-1); color: white; }
 .schema-workbench { --schema-border: var(--vp-c-divider); --schema-soft: var(--vp-c-bg-soft); --schema-muted: var(--vp-c-text-2); --schema-accent: #6366f1; --schema-accent-strong: #4f46e5; --schema-edge: #778397; display: grid; grid-template-columns: 230px minmax(0, 1fr); gap: 16px; color: var(--vp-c-text-1); align-items: start; }
 :global(.dark) .schema-workbench { --schema-accent: #a5b4fc; --schema-accent-strong: #c7d2fe; --schema-edge: #a0aec0; }
-.explorer-shell.fullscreen .schema-workbench { flex: 1; min-height: 0; align-items: stretch; }
-.explorer-shell.fullscreen .plugin-panel { position: static; max-height: 100%; }
-.explorer-shell.fullscreen .graph-panel { display: flex; flex-direction: column; min-height: 0; }
-.explorer-shell.fullscreen .graph-canvas { flex: 1; max-height: none; min-height: 0; }
-.explorer-shell.fullscreen .graph-svg { width: 100%; height: 100%; min-height: 700px; }
+.schema-workbench { flex: 1; min-height: 0; align-items: stretch; }
+.graph-panel { display: flex; flex-direction: column; min-height: 0; }
+.graph-canvas { flex: 1; max-height: none; min-height: 0; }
 .plugin-panel, .graph-panel { border: 1px solid var(--schema-border); border-radius: 12px; background: var(--vp-c-bg); }
-.plugin-panel { padding: 14px; position: sticky; top: 16px; max-height: calc(100vh - 32px); overflow-y: auto; }
+.plugin-panel { padding: 14px; max-height: 100%; overflow-y: auto; }
 .plugin-panel-heading, .graph-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
 .graph-controls { display: flex; flex: 0 0 auto; align-items: center; gap: 5px; }
 .graph-controls button { min-width: 28px; border: 1px solid var(--schema-border); border-radius: 5px; padding: 4px 7px; background: var(--vp-c-bg); color: var(--vp-c-text-1); cursor: pointer; font: 600 .78rem var(--vp-font-family-base); }
@@ -348,8 +247,9 @@ function trapDialogFocus(event: KeyboardEvent) {
 .group-select { flex: 0 0 68px; }
 .plugin-group { margin-top: 11px; padding-top: 9px; border-top: 1px solid var(--schema-border); }
 .plugin-group-heading { display: flex; align-items: center; justify-content: space-between; gap: 5px; margin-bottom: 3px; font-size: .72rem; }
-.plugin-option { display: flex; align-items: center; gap: 7px; margin: 3px 0; padding: 6px; border-radius: 6px; cursor: pointer; }
+.plugin-option { display: flex; align-items: center; justify-content: space-between; gap: 7px; margin: 3px 0; padding: 6px; border-radius: 6px; }
 .plugin-option:hover, .plugin-option.selected { background: var(--schema-soft); }
+.plugin-checkbox { display: flex; min-width: 0; align-items: center; gap: 7px; cursor: pointer; }
 .plugin-option input { accent-color: var(--vp-c-brand-1); flex: 0 0 auto; }
 .plugin-label { overflow-wrap: anywhere; font: 600 .72rem var(--vp-font-family-mono); }
 .plugin-highlight { flex: 0 0 auto; border: 0; padding: 0 2px; color: var(--schema-muted); cursor: pointer; font-size: .82rem; line-height: 1; }
@@ -387,12 +287,4 @@ function trapDialogFocus(event: KeyboardEvent) {
 .node-inspector > span:nth-child(2) { color: var(--schema-muted); }
 .inspector-plugin, .shared-label { padding: 3px 6px; border-radius: 5px; background: var(--schema-soft); font: 600 .68rem var(--vp-font-family-mono); }
 .shared-label { background: var(--vp-c-brand-soft); color: var(--vp-c-brand-1); }
-@media (max-width: 760px) {
-  .explorer-toolbar { align-items: flex-start; flex-direction: column; }
-  .explorer-shell.fullscreen { padding: 10px; }
-  .schema-workbench { grid-template-columns: 1fr; }
-  .plugin-panel { position: static; max-height: 270px; }
-  .graph-canvas { max-height: 68vh; min-height: 480px; }
-  .graph-svg { min-height: 480px; }
-}
 </style>

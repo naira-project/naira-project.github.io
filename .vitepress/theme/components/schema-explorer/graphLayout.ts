@@ -5,13 +5,12 @@ export type Layout = { positions: Map<string, Point>; routes: Map<string, Point[
 
 export const NODE_W = 182
 export const NODE_H = 50
-const HALF_W = NODE_W / 2
+export const HALF_W = NODE_W / 2
+export const edgeKey = (from: string, to: string) => `${from}\u0000${to}`
 const COL_GAP = 350 // Distance between column centers.
 const LANE_SEP = 30 // Minimum vertical spacing between items in a column.
 const VIRTUAL_H = 14 // Virtual node height used to reserve an edge lane.
 const PAD = 40
-
-const edgeKey = (from: string, to: string) => `${from}\u0000${to}`
 
 /**
  * Computes a deterministic layered layout using a lightweight Sugiyama approach.
