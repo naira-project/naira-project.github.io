@@ -39,6 +39,8 @@ The chart refuses to render with bare defaults: it needs a source for the catalo
 
 **Tech Radar.** Enable the `tech-radar` plugin and provide the radar file through `config.data` or an existing ConfigMap. See [Tech Radar](/documentation/tech-radar).
 
+**Handbooks.** List each handbook under `handbooks` with its image pinned by digest, and set `handbookGateway` to the handbook domain, the portal origin and the registries you allow. Handbooks need wildcard DNS and a wildcard certificate for `*.<handbookGateway.domain>` on the same site as the portal. See [Handbooks](/documentation/handbooks).
+
 **Database.** The chart runs a PostgreSQL server by default and seeds one database per entry in `database.databases`, with its own role and password, idempotently. Set `postgresql.enabled=false` and `database.host` to use an existing server, and a strict `database.sslmode` in that case. The catalog does not persist its graph there yet.
 
 **Metrics.** `ui.prometheus.upstream` names the Prometheus-compatible endpoint the UI queries for the metric panels on inference endpoint pages. The UI forwards the user's token, so the endpoint is never exposed unauthenticated.

@@ -105,6 +105,7 @@ export default withMermaid({
           items: [
             { text: "The Portal", link: "/documentation/portal" },
             { text: "Tech Radar", link: "/documentation/tech-radar" },
+            { text: "Handbooks", link: "/documentation/handbooks" },
             { text: "Catalog API", link: "/documentation/api" },
           ],
         },

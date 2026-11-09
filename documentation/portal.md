@@ -1,6 +1,6 @@
 # The Portal
 
-The portal is where users explore the catalog. After logging in, the left navigation shows the Overview, the Plugins page, the catalogs and the Explore section with the Tech Radar.
+The portal is where users explore the catalog. After logging in, the left navigation shows the Overview, the Plugins page, the catalogs, the Explore section with the Tech Radar and, when handbooks are installed, the Docs group.
 
 ## Overview
 
@@ -42,6 +42,10 @@ A failed run leaves the catalog unchanged. The previous snapshot of that plugin 
 ## Tech Radar
 
 The Tech Radar under Explore renders the organization's technology decisions and links entries to the models and endpoints in the catalog. See [Tech Radar](/documentation/tech-radar).
+
+## Handbooks
+
+The Docs group lists the handbooks the operator installed: static sites that teams write in Git, such as onboarding guides or runbooks. A handbook opens inside the portal, and its footer names its owner and source. Without an installed handbook there is no Docs group. See [Handbooks](/documentation/handbooks).
 
 ## Standalone UI
 
