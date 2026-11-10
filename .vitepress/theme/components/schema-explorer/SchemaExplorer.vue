@@ -284,8 +284,8 @@ dialog.explorer-dialog::backdrop { background: rgb(0 0 0 / 65%); }
 dialog.explorer-dialog[open] { display: flex; flex-direction: column; gap: 12px; overflow: auto; }
 .fullscreen-toolbar { display: flex; flex: 0 0 auto; align-items: center; justify-content: space-between; }
 .close-fullscreen { background: var(--vp-c-brand-1); color: white; }
-.schema-workbench { --schema-border: var(--vp-c-divider); --schema-soft: var(--vp-c-bg-soft); --schema-muted: var(--vp-c-text-2); --schema-accent: #6366f1; --schema-accent-strong: #4f46e5; --schema-edge: #778397; --schema-relation-selected: #ea580c; --schema-relation-same-kind: #0d9488; display: grid; grid-template-columns: 230px minmax(0, 1fr); gap: 16px; color: var(--vp-c-text-1); align-items: start; }
-:global(.dark) .schema-workbench { --schema-accent: #a5b4fc; --schema-accent-strong: #c7d2fe; --schema-edge: #a0aec0; --schema-relation-selected: #fb923c; --schema-relation-same-kind: #2dd4bf; }
+.schema-workbench { --schema-border: var(--vp-c-divider); --schema-soft: var(--vp-c-bg-soft); --schema-muted: var(--vp-c-text-2); --schema-accent: #6366f1; --schema-accent-strong: #4f46e5; --schema-edge: #778397; --schema-relation-selected: #006d77; --schema-relation-same-kind: #647c9b; display: grid; grid-template-columns: 230px minmax(0, 1fr); gap: 16px; color: var(--vp-c-text-1); align-items: start; }
+:global(.dark) .schema-workbench { --schema-accent: #a5b4fc; --schema-accent-strong: #c7d2fe; --schema-edge: #a0aec0; --schema-relation-selected: #4db6bf; --schema-relation-same-kind: #91a8c7; }
 .schema-workbench { flex: 1; min-height: 0; align-items: stretch; }
 .graph-panel { display: flex; flex-direction: column; min-height: 0; }
 .graph-canvas { flex: 1; max-height: none; min-height: 0; }
@@ -343,7 +343,7 @@ dialog.explorer-dialog[open] { display: flex; flex-direction: column; gap: 12px;
 
 .node-group:focus-visible rect { stroke: var(--vp-c-brand-1); stroke-width: 3; }
 .node-group.highlighted rect { stroke: var(--schema-accent); stroke-width: 2.8; }
-.node-group.relation-endpoint rect { fill: color-mix(in srgb, var(--schema-relation-selected) 12%, var(--vp-c-bg)); stroke: var(--schema-relation-selected); stroke-width: 3; }
+.node-group.relation-endpoint rect { fill: color-mix(in srgb, var(--schema-relation-selected) 10%, var(--vp-c-bg)); stroke: var(--schema-relation-selected); stroke-width: 3; }
 
 .node-label { fill: var(--vp-c-text-1); text-anchor: middle; font: 700 12px var(--vp-font-family-mono); }
 .node-source-codes rect { fill: var(--vp-c-bg-soft); stroke: var(--vp-c-divider); stroke-width: .8; }
