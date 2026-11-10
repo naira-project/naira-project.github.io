@@ -20,6 +20,7 @@ const zoom = ref(1)
 const selected = ref(new Set(plugins.map(({ id }) => id)))
 const focusedNode = ref<string | null>(null)
 const highlightedPlugin = ref<string | null>(null)
+const selectedEdgeKey = ref<string | null>(null)
 const pluginById = new Map(plugins.map((plugin) => [plugin.id, plugin]))
 const visibleNodes = computed<PlacedNode[]>(() => nodes
   .filter((node) => node.sources.some((source) => selected.value.has(source)) && layout.positions.has(node.kind))
@@ -87,6 +88,36 @@ const visibleEdges = computed(() =>
   routeEdges(visibleRelations.value, visibleNodes.value, layout.positions, layout.routes),
 )
 
+function edgeKey(relation: { kind: string; from: string; to: string }) {
+  return `${relation.kind}-${relation.from}-${relation.to}`
+}
+
+const selectedEdge = computed(() =>
+  visibleEdges.value.find((edge) => edgeKey(edge.relation) === selectedEdgeKey.value),
+)
+const selectedEdgeKind = computed(() => selectedEdge.value?.relation.kind ?? null)
+const selectedEdgeEndpoints = computed(() => new Set(
+  selectedEdge.value ? [selectedEdge.value.relation.from, selectedEdge.value.relation.to] : [],
+))
+
+// Selected edges are painted last so they stay on top of overlapping edges.
+const renderedEdges = computed(() => {
+  const rank = (edge: (typeof visibleEdges.value)[number]) => {
+    if (edgeKey(edge.relation) === selectedEdgeKey.value) return 2
+    return edge.relation.kind === selectedEdgeKind.value ? 1 : 0
+  }
+  return [...visibleEdges.value].sort((a, b) => rank(a) - rank(b))
+})
+
+watch(selectedEdgeKind, (kind) => {
+  if (kind === null) selectedEdgeKey.value = null
+})
+
+function toggleEdgeSelection(relation: { kind: string; from: string; to: string }) {
+  const key = edgeKey(relation)
+  selectedEdgeKey.value = selectedEdgeKey.value === key ? null : key
+}
+
 async function openFullscreen() {
   isOpen.value = true
   await nextTick()
@@ -140,6 +171,8 @@ function onClose() {
             </section>
             <div class="legend">
               <span class="legend-edge"></span><span>Relation arrow; label shows kind</span>
+              <span class="legend-edge legend-edge-selected"></span><span>Selected relation (click its label)</span>
+              <span class="legend-edge legend-edge-same-kind"></span><span>Other relations of the same kind</span>
             </div>
             <details class="plugin-code-legend">
               <summary>Plugin code legend</summary>
@@ -147,7 +180,7 @@ function onClose() {
                 <span v-for="plugin in plugins" :key="plugin.id" class="plugin-code-entry"><code>{{ plugin.short }}</code> {{ plugin.label }}</span>
               </div>
             </details>
-            <p class="panel-footnote">Click a node to inspect which selected plugins contribute it. Hover a node or arrow for details.</p>
+            <p class="panel-footnote">Click a node to inspect which selected plugins contribute it. Click a relation label to highlight that edge, its endpoint nodes, and all other edges of the same kind; click it again to clear. Only the selected edge's endpoint nodes are highlighted. Hover a node or arrow for details.</p>
           </aside>
 
           <div class="graph-panel">
@@ -170,9 +203,29 @@ function onClose() {
               >
                 <defs><marker id="schema-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M 0 0 L 8 4 L 0 8 z" fill="context-stroke" /></marker></defs>
                 <g class="edges">
-                  <g v-for="edge in visibleEdges" :key="`${edge.relation.kind}-${edge.relation.from}-${edge.relation.to}`" class="edge-group" :class="{ highlighted: highlightedPlugin && edge.relation.sources.includes(highlightedPlugin) }">
+                  <g
+                    v-for="edge in renderedEdges"
+                    :key="edgeKey(edge.relation)"
+                    class="edge-group"
+                    :class="{
+                      highlighted: highlightedPlugin && edge.relation.sources.includes(highlightedPlugin),
+                      'relation-selected': selectedEdgeKey === edgeKey(edge.relation),
+                      'relation-same-kind': selectedEdgeKind === edge.relation.kind && selectedEdgeKey !== edgeKey(edge.relation),
+                    }"
+                  >
                     <path :d="edge.d" marker-end="url(#schema-arrow)" />
-                    <text :x="edge.label.x" :y="edge.label.y">{{ edge.relation.kind }}</text>
+                    <text
+                      class="edge-label"
+                      role="button"
+                      tabindex="0"
+                      :x="edge.label.x"
+                      :y="edge.label.y"
+                      :aria-pressed="selectedEdgeKey === edgeKey(edge.relation)"
+                      :aria-label="`${edge.relation.from} ${edge.relation.kind} ${edge.relation.to}; highlight relations of this kind`"
+                      @click.stop="toggleEdgeSelection(edge.relation)"
+                      @keydown.enter.prevent="toggleEdgeSelection(edge.relation)"
+                      @keydown.space.prevent="toggleEdgeSelection(edge.relation)"
+                    >{{ edge.relation.kind }}</text>
                     <title>{{ edge.relation.from }} —{{ edge.relation.kind }}→ {{ edge.relation.to }}; {{ activeSources(edge.relation.sources).map((id) => pluginById.get(id)?.label ?? id).join(', ') }}</title>
                   </g>
                 </g>
@@ -180,7 +233,11 @@ function onClose() {
                   v-for="node in visibleNodes"
                   :key="node.kind"
                   class="node-group"
-                  :class="{ focused: focusedNode === node.kind, highlighted: highlightedPlugin && node.sources.includes(highlightedPlugin) }"
+                  :class="{
+                    focused: focusedNode === node.kind,
+                    highlighted: highlightedPlugin && node.sources.includes(highlightedPlugin),
+                    'relation-endpoint': selectedEdgeEndpoints.has(node.kind),
+                  }"
                   role="button"
                   tabindex="0"
                   :aria-label="`${node.kind}, provided by ${node.sourceLabels}`"
@@ -227,8 +284,8 @@ dialog.explorer-dialog::backdrop { background: rgb(0 0 0 / 65%); }
 dialog.explorer-dialog[open] { display: flex; flex-direction: column; gap: 12px; overflow: auto; }
 .fullscreen-toolbar { display: flex; flex: 0 0 auto; align-items: center; justify-content: space-between; }
 .close-fullscreen { background: var(--vp-c-brand-1); color: white; }
-.schema-workbench { --schema-border: var(--vp-c-divider); --schema-soft: var(--vp-c-bg-soft); --schema-muted: var(--vp-c-text-2); --schema-accent: #6366f1; --schema-accent-strong: #4f46e5; --schema-edge: #778397; display: grid; grid-template-columns: 230px minmax(0, 1fr); gap: 16px; color: var(--vp-c-text-1); align-items: start; }
-:global(.dark) .schema-workbench { --schema-accent: #a5b4fc; --schema-accent-strong: #c7d2fe; --schema-edge: #a0aec0; }
+.schema-workbench { --schema-border: var(--vp-c-divider); --schema-soft: var(--vp-c-bg-soft); --schema-muted: var(--vp-c-text-2); --schema-accent: #6366f1; --schema-accent-strong: #4f46e5; --schema-edge: #778397; --schema-relation-selected: #ea580c; --schema-relation-same-kind: #0d9488; display: grid; grid-template-columns: 230px minmax(0, 1fr); gap: 16px; color: var(--vp-c-text-1); align-items: start; }
+:global(.dark) .schema-workbench { --schema-accent: #a5b4fc; --schema-accent-strong: #c7d2fe; --schema-edge: #a0aec0; --schema-relation-selected: #fb923c; --schema-relation-same-kind: #2dd4bf; }
 .schema-workbench { flex: 1; min-height: 0; align-items: stretch; }
 .graph-panel { display: flex; flex-direction: column; min-height: 0; }
 .graph-canvas { flex: 1; max-height: none; min-height: 0; }
@@ -260,6 +317,8 @@ dialog.explorer-dialog[open] { display: flex; flex-direction: column; gap: 12px;
 .plugin-code-entry code { display: inline-block; width: 34px; color: var(--vp-c-text-1); font-weight: 700; }
 .legend { display: grid; grid-template-columns: 18px 1fr; gap: 7px; align-items: center; margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--schema-border); color: var(--schema-muted); font-size: .68rem; }
 .legend-edge { height: 0; border-top: 2px solid var(--vp-c-text-2); }
+.legend-edge-selected { border-top: 3px solid var(--schema-relation-selected); }
+.legend-edge-same-kind { border-top: 3px solid var(--schema-relation-same-kind); }
 .panel-footnote { color: var(--schema-muted); font-size: .7rem; line-height: 1.5; margin: 12px 0 0; }
 .graph-panel { min-width: 0; overflow: hidden; }
 .graph-heading { padding: 14px 16px 10px; }
@@ -270,6 +329,12 @@ dialog.explorer-dialog[open] { display: flex; flex-direction: column; gap: 12px;
 .edge-group text { fill: var(--vp-c-text-2); stroke: var(--vp-c-bg); stroke-width: 4px; paint-order: stroke; text-anchor: middle; font: 600 11px var(--vp-font-family-mono); }
 .edge-group.highlighted path { stroke: var(--schema-accent); stroke-width: 3.2; opacity: 1; }
 .edge-group.highlighted text { fill: var(--schema-accent-strong); font-weight: 800; }
+.edge-group .edge-label { cursor: pointer; outline: none; }
+.edge-group .edge-label:hover, .edge-group .edge-label:focus-visible { fill: var(--vp-c-brand-1); text-decoration: underline; }
+.edge-group.relation-same-kind path { stroke: var(--schema-relation-same-kind); stroke-width: 3; opacity: 1; }
+.edge-group.relation-same-kind text { fill: var(--schema-relation-same-kind); font-weight: 800; }
+.edge-group.relation-selected path { stroke: var(--schema-relation-selected); stroke-width: 3.6; opacity: 1; }
+.edge-group.relation-selected text { fill: var(--schema-relation-selected); font-weight: 800; }
 
 .node-group { cursor: pointer; outline: none; }
 .node-group rect { fill: var(--vp-c-bg); stroke: var(--vp-c-divider); stroke-width: 1.5; filter: drop-shadow(0 2px 2px rgb(0 0 0 / 8%)); transition: stroke .15s ease, fill .15s ease; }
@@ -278,6 +343,7 @@ dialog.explorer-dialog[open] { display: flex; flex-direction: column; gap: 12px;
 
 .node-group:focus-visible rect { stroke: var(--vp-c-brand-1); stroke-width: 3; }
 .node-group.highlighted rect { stroke: var(--schema-accent); stroke-width: 2.8; }
+.node-group.relation-endpoint rect { fill: color-mix(in srgb, var(--schema-relation-selected) 12%, var(--vp-c-bg)); stroke: var(--schema-relation-selected); stroke-width: 3; }
 
 .node-label { fill: var(--vp-c-text-1); text-anchor: middle; font: 700 12px var(--vp-font-family-mono); }
 .node-source-codes rect { fill: var(--vp-c-bg-soft); stroke: var(--vp-c-divider); stroke-width: .8; }
