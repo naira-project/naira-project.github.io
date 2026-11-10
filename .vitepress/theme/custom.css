@@ -1,63 +1,55 @@
 html {
-    font-size: 20px;
+  font-size: 20px;
 }
 
 :root {
-    --vp-home-hero-name-color: transparent;
-    --vp-home-hero-name-background: -webkit-linear-gradient(
-            120deg,
-            #3456fe 30%,
-            #41d1ff
-    );
-    --vp-home-hero-image-background-image: linear-gradient(
-            -45deg,
-            #3474fe 50%,
-            #47caff 50%
-    );
-    --vp-home-hero-image-filter: blur(44px);
+  --vp-home-hero-name-color: transparent;
+  --vp-home-hero-name-background: -webkit-linear-gradient(120deg, #3456fe 30%, #41d1ff);
+  --vp-home-hero-image-background-image: linear-gradient(-45deg, #3474fe 50%, #47caff 50%);
+  --vp-home-hero-image-filter: blur(44px);
 }
 
 @media (min-width: 640px) {
-    :root {
-        --vp-home-hero-image-filter: blur(56px);
-    }
+  :root {
+    --vp-home-hero-image-filter: blur(56px);
+  }
 }
 
 @media (min-width: 960px) {
-    :root {
-        --vp-home-hero-image-filter: blur(68px);
-    }
+  :root {
+    --vp-home-hero-image-filter: blur(68px);
+  }
 }
 
 .VPHero .VPImage {
-    filter: drop-shadow(-2px 4px 6px rgba(0, 0, 0, 0.2));
-    padding: 18px;
+  filter: drop-shadow(-2px 4px 6px rgba(0, 0, 0, 0.2));
+  padding: 18px;
 }
 
 /* used in reference/default-theme-search */
-img[src='/search.png'] {
-    width: 100%;
-    aspect-ratio: 1 / 1;
+img[src="/search.png"] {
+  width: 100%;
+  aspect-ratio: 1 / 1;
 }
 
 .details a {
-    text-decoration: underline;
-    text-underline-offset: 2px;
+  text-decoration: underline;
+  text-underline-offset: 2px;
 }
 
 :root {
-    --naira-petrol: #006D77;
+  --naira-petrol: #006d77;
 }
 
 .dark {
-    --naira-petrol: #4DB6BF;
+  --naira-petrol: #4db6bf;
 }
 
 .vp-doc blockquote {
-    color: var(--naira-petrol);
-    border-left-color: var(--naira-petrol);
+  color: var(--naira-petrol);
+  border-left-color: var(--naira-petrol);
 }
 
 .vp-doc blockquote > p {
-    color: var(--naira-petrol);
+  color: var(--naira-petrol);
 }

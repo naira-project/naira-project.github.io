@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { computed } from "vue";
 import { useData, withBase } from "vitepress";
+import { computed } from "vue";
 import { data as posts } from "../../blog.data";
 
 const { page } = useData();
@@ -8,10 +8,7 @@ const { page } = useData();
 const currentIndex = computed(() => {
   const path = page.value.relativePath.replace(/\.md$/, "");
   return posts.findIndex(
-    (p) =>
-      p.url === `/${path}` ||
-      p.url === path ||
-      p.url.endsWith(`/${path}`),
+    (p) => p.url === `/${path}` || p.url === path || p.url.endsWith(`/${path}`),
   );
 });
 

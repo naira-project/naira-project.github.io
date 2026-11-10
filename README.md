@@ -9,6 +9,21 @@ npm install
 npm run dev
 ```
 
+## Code Checks
+
+Biome formats and lints the project's JavaScript, TypeScript, JSON, and CSS files. Run the
+checks (including the TypeScript check) before submitting changes:
+
+```sh
+npm run check
+```
+
+To apply Biome's safe formatting and fixes:
+
+```sh
+npm run fix
+```
+
 ## Releasing
 
 The release is performed automatically through a GitHub Actions Workflow. The resulting website will be available as github page under the following URL: https://naira-project.github.io/

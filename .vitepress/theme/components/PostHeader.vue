@@ -1,13 +1,14 @@
 <script setup lang="ts">
-import { computed } from "vue";
 import { useData, withBase } from "vitepress";
+import { computed } from "vue";
 import { data as posts } from "../../blog.data";
 
 const { frontmatter, page } = useData();
 
-const post = computed(() =>
-  posts.find((p) => p.url === page.value.relativePath.replace(/\.md$/, "").replace(/^/, "/")) ??
-  posts.find((p) => p.url.endsWith(page.value.relativePath.replace(/\.md$/, ""))),
+const post = computed(
+  () =>
+    posts.find((p) => p.url === page.value.relativePath.replace(/\.md$/, "").replace(/^/, "/")) ??
+    posts.find((p) => p.url.endsWith(page.value.relativePath.replace(/\.md$/, ""))),
 );
 
 const dateFormatted = computed(() => {
