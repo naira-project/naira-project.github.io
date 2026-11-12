@@ -104,11 +104,11 @@ export function routeEdges(
 
   const lanes = new Map<GraphRelation, { offset: number }>();
   for (const group of relationGroups.values()) {
-    group.forEach((relation, index) =>
+    group.forEach((relation, index) => {
       lanes.set(relation, {
         offset: (index - (group.length - 1) / 2) * 24,
-      }),
-    );
+      });
+    });
   }
 
   const prepared: PreparedEdge[] = [];

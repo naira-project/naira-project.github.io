@@ -35,16 +35,20 @@ const visibleNodes = computed<PlacedNode[]>(() =>
         node.sources.some((source) => selected.value.has(source)) &&
         layout.positions.has(node.kind),
     )
-    .map((node) => {
+    .flatMap((node) => {
+      const position = layout.positions.get(node.kind);
+      if (!position) return [];
       const activeSources = node.sources.filter((source) => selected.value.has(source));
-      return {
-        ...node,
-        ...layout.positions.get(node.kind)!,
-        activeSources,
-        badges: activeSources.slice(0, MAX_BADGES),
-        sourceOverflow: Math.max(0, activeSources.length - MAX_BADGES),
-        sourceLabels: activeSources.map((id) => pluginById.get(id)?.label ?? id).join(", "),
-      };
+      return [
+        {
+          ...node,
+          ...position,
+          activeSources,
+          badges: activeSources.slice(0, MAX_BADGES),
+          sourceOverflow: Math.max(0, activeSources.length - MAX_BADGES),
+          sourceLabels: activeSources.map((id) => pluginById.get(id)?.label ?? id).join(", "),
+        },
+      ];
     }),
 );
 const visibleKinds = computed(() => new Set(visibleNodes.value.map((node) => node.kind)));

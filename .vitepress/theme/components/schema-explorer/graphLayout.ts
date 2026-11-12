@@ -1,3 +1,9 @@
+function required<K, V>(map: Map<K, V>, key: K): V {
+  const value = map.get(key);
+  if (value === undefined) throw new Error(`Missing graph layout value for ${String(key)}`);
+  return value;
+}
+
 export type Point = { x: number; y: number };
 export type GraphNode = { kind: string; sources: string[] };
 export type GraphRelation = { kind: string; from: string; to: string; sources: string[] };
@@ -44,7 +50,7 @@ export function computeLayout(nodeList: GraphNode[], relationList: GraphRelation
   const outgoing = new Map(kinds.map((kind) => [kind, [] as string[]]));
   const hasIncomingRaw = new Set<string>();
   for (const [from, to] of edges) {
-    outgoing.get(from)!.push(to);
+    required(outgoing, from).push(to);
     hasIncomingRaw.add(to);
   }
   const roots = [
@@ -55,7 +61,7 @@ export function computeLayout(nodeList: GraphNode[], relationList: GraphRelation
   const dag: [string, string][] = [];
   const visit = (kind: string) => {
     state.set(kind, 1);
-    for (const target of outgoing.get(kind)!.slice().sort()) {
+    for (const target of required(outgoing, kind).slice().sort()) {
       if (state.get(target) === 1) continue; // Ignore back edges when calculating the layout.
       dag.push([kind, target]);
       if (!state.get(target)) visit(target);
@@ -69,8 +75,10 @@ export function computeLayout(nodeList: GraphNode[], relationList: GraphRelation
   for (let pass = 0; pass < kinds.length; pass++) {
     let changed = false;
     for (const [from, to] of dag) {
-      if (layerOf.get(to)! < layerOf.get(from)! + 1) {
-        layerOf.set(to, layerOf.get(from)! + 1);
+      const targetLayer = required(layerOf, to);
+      const nextLayer = required(layerOf, from) + 1;
+      if (targetLayer < nextLayer) {
+        layerOf.set(to, nextLayer);
         changed = true;
       }
     }
@@ -79,7 +87,7 @@ export function computeLayout(nodeList: GraphNode[], relationList: GraphRelation
   const hasIncoming = new Set(dag.map(([, to]) => to));
   for (const kind of kinds) {
     if (hasIncoming.has(kind)) continue;
-    const successors = dag.filter(([from]) => from === kind).map(([, to]) => layerOf.get(to)!);
+    const successors = dag.filter(([from]) => from === kind).map(([, to]) => required(layerOf, to));
     if (successors.length) layerOf.set(kind, Math.min(...successors) - 1);
   }
 
@@ -89,12 +97,13 @@ export function computeLayout(nodeList: GraphNode[], relationList: GraphRelation
   const links: [string, string][] = [];
   const chains = new Map<string, string[]>();
   for (const [from, to] of dag) {
-    const span = layerOf.get(to)! - layerOf.get(from)!;
+    const fromLayer = required(layerOf, from);
+    const span = required(layerOf, to) - fromLayer;
     const chain: string[] = [];
     let previous = from;
     for (let step = 1; step < span; step++) {
       const id = `\u0001${from}\u0000${to}\u0000${step}`;
-      layerOf.set(id, layerOf.get(from)! + step);
+      layerOf.set(id, fromLayer + step);
       sizeOf.set(id, VIRTUAL_H);
       ids.push(id);
       chain.push(id);
@@ -110,38 +119,50 @@ export function computeLayout(nodeList: GraphNode[], relationList: GraphRelation
   for (const [a, b] of links) {
     connected.add(a);
     connected.add(b);
-    neighbors.get(a)!.push(b);
-    neighbors.get(b)!.push(a);
+    required(neighbors, a).push(b);
+    required(neighbors, b).push(a);
   }
 
-  const layerCount = Math.max(0, ...kinds.map((kind) => layerOf.get(kind)!)) + 1;
+  const layerCount = Math.max(0, ...kinds.map((kind) => required(layerOf, kind))) + 1;
   const columns: string[][] = Array.from({ length: layerCount }, () => []);
-  for (const id of ids) if (connected.has(id)) columns[layerOf.get(id)!].push(id);
+  for (const id of ids) {
+    if (!connected.has(id)) continue;
+    const column = columns[required(layerOf, id)];
+    if (!column) throw new Error(`Missing graph layout column for ${id}`);
+    column.push(id);
+  }
   // Place isolated nodes at the bottom of the first column.
   const isolated = kinds.filter((kind) => !connected.has(kind));
 
   // Order nodes in each column using the barycenter heuristic.
   const rank = new Map<string, number>();
-  const refreshRanks = (column: string[]) =>
-    column.forEach((id, index) => rank.set(id, (index + 0.5) / column.length));
+  const refreshRanks = (column: string[]) => {
+    column.forEach((id, index) => {
+      rank.set(id, (index + 0.5) / column.length);
+    });
+  };
   columns.forEach(refreshRanks);
   const sweep = (order: number[], direction: -1 | 1) => {
     for (const index of order) {
       const column = columns[index];
       const score = new Map<string, number>();
       for (const id of column) {
-        const adjacent = neighbors
-          .get(id)!
-          .filter((other) => (layerOf.get(other)! - index) * direction > 0);
+        const adjacent = required(neighbors, id).filter(
+          (other) => (required(layerOf, other) - index) * direction > 0,
+        );
+        const idRank = required(rank, id);
         score.set(
           id,
           adjacent.length
-            ? adjacent.reduce((sum, other) => sum + rank.get(other)!, 0) / adjacent.length
-            : rank.get(id)!,
+            ? adjacent.reduce((sum, other) => sum + required(rank, other), 0) / adjacent.length
+            : idRank,
         );
       }
       const previous = new Map(column.map((id, i) => [id, i]));
-      column.sort((a, b) => score.get(a)! - score.get(b)! || previous.get(a)! - previous.get(b)!);
+      column.sort(
+        (a, b) =>
+          required(score, a) - required(score, b) || required(previous, a) - required(previous, b),
+      );
       refreshRanks(column);
     }
   };
@@ -153,26 +174,29 @@ export function computeLayout(nodeList: GraphNode[], relationList: GraphRelation
   columns[0].push(...isolated);
 
   // Position nodes vertically near the average position of their neighbors.
-  const gap = (a: string, b: string) => (sizeOf.get(a)! + sizeOf.get(b)!) / 2 + LANE_SEP;
+  const gap = (a: string, b: string) => (required(sizeOf, a) + required(sizeOf, b)) / 2 + LANE_SEP;
   const y = new Map<string, number>();
-  columns.forEach((column) =>
-    column.forEach((id, i) =>
-      y.set(id, i === 0 ? 0 : y.get(column[i - 1])! + gap(column[i - 1], id)),
-    ),
-  );
+  columns.forEach((column) => {
+    column.forEach((id, i) => {
+      y.set(id, i === 0 ? 0 : required(y, column[i - 1]) + gap(column[i - 1], id));
+    });
+  });
   const place = (column: string[]) => {
     if (!column.length) return;
     const desired = column.map((id) => {
-      const adjacent = neighbors.get(id)!;
+      const adjacent = required(neighbors, id);
       return adjacent.length
-        ? adjacent.reduce((sum, other) => sum + y.get(other)!, 0) / adjacent.length
-        : y.get(id)!;
+        ? adjacent.reduce((sum, other) => sum + required(y, other), 0) / adjacent.length
+        : required(y, id);
     });
     const actual = desired.slice();
-    for (let i = 1; i < actual.length; i++)
+    for (let i = 1; i < actual.length; i++) {
       actual[i] = Math.max(actual[i], actual[i - 1] + gap(column[i - 1], column[i]));
+    }
     const shift = desired.reduce((sum, value, i) => sum + value - actual[i], 0) / column.length;
-    column.forEach((id, i) => y.set(id, actual[i] + shift));
+    column.forEach((id, i) => {
+      y.set(id, actual[i] + shift);
+    });
   };
   for (let iteration = 0; iteration < 10; iteration++) {
     columns.forEach(place);
@@ -182,18 +206,22 @@ export function computeLayout(nodeList: GraphNode[], relationList: GraphRelation
   let top = Infinity;
   let bottom = -Infinity;
   for (const id of ids) {
-    top = Math.min(top, y.get(id)! - sizeOf.get(id)! / 2);
-    bottom = Math.max(bottom, y.get(id)! + sizeOf.get(id)! / 2);
+    const nodeY = required(y, id);
+    const nodeHeight = required(sizeOf, id);
+    top = Math.min(top, nodeY - nodeHeight / 2);
+    bottom = Math.max(bottom, nodeY + nodeHeight / 2);
   }
   const offsetY = PAD - top;
   const point = (id: string): Point => ({
-    x: PAD + HALF_W + layerOf.get(id)! * COL_GAP,
-    y: y.get(id)! + offsetY,
+    x: PAD + HALF_W + required(layerOf, id) * COL_GAP,
+    y: required(y, id) + offsetY,
   });
 
   const positions = new Map<string, Point>(kinds.map((kind) => [kind, point(kind)]));
   const routes = new Map<string, Point[]>();
-  chains.forEach((chain, key) => routes.set(key, chain.map(point)));
+  chains.forEach((chain, key) => {
+    routes.set(key, chain.map(point));
+  });
   return {
     positions,
     routes,
