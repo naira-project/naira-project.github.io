@@ -19,7 +19,7 @@ export function buildGraphModel(pluginGraph: PluginGraphDocument): GraphModel {
     const group = presentation.group ?? FALLBACK_GROUP
     return {
       id,
-      label: presentation.label ?? id.replaceAll('_', '-'),
+      label: id.replaceAll('_', '-'),
       short: presentation.short ?? id.slice(0, 3).toUpperCase(),
       group,
       groupLabel: pluginGroupLabel(group),

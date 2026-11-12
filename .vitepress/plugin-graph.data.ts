@@ -7,6 +7,9 @@ type RawRelation = { kind: string; from: string; to: string }
 type RawPlugin = { plugin: string; nodes: string[]; relations: RawRelation[] }
 type PluginGraphDocument = { plugins: RawPlugin[] }
 
+// VitePress generates the named `data` export for client imports of data loaders.
+export declare const data: PluginGraphDocument
+
 function validatePluginGraph(value: unknown): PluginGraphDocument {
   if (!value || typeof value !== 'object' || !Array.isArray((value as PluginGraphDocument).plugins)) {
     throw new Error('Expected plugin graph YAML to contain a plugins array.')
