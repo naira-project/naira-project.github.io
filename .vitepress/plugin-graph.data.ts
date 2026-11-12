@@ -18,6 +18,7 @@ function validatePluginGraph(value: unknown): PluginGraphDocument {
   }
 
   const plugins = (value as { plugins: unknown[] }).plugins;
+  const seenIds = new Set<string>();
   for (const [index, entry] of plugins.entries()) {
     if (!entry || typeof entry !== "object") {
       throw new Error(`Plugin graph entry ${index + 1} must be an object.`);
@@ -26,6 +27,10 @@ function validatePluginGraph(value: unknown): PluginGraphDocument {
     if (typeof plugin.plugin !== "string" || !plugin.plugin.trim()) {
       throw new Error(`Plugin graph entry ${index + 1} must have a plugin ID.`);
     }
+    if (seenIds.has(plugin.plugin)) {
+      throw new Error(`Duplicate plugin ID "${plugin.plugin}".`);
+    }
+    seenIds.add(plugin.plugin);
     if (!Array.isArray(plugin.nodes) || !plugin.nodes.every((node) => typeof node === "string")) {
       throw new Error(`Plugin graph entry "${plugin.plugin}" must have a string nodes array.`);
     }

@@ -26,6 +26,11 @@ const zoom = ref(1);
 const selected = ref(new Set(plugins.map(({ id }) => id)));
 const focusedNodeSelection = ref<string | null>(null);
 const highlightedPlugin = ref<string | null>(null);
+const activeHighlight = computed(() =>
+  highlightedPlugin.value && selected.value.has(highlightedPlugin.value)
+    ? highlightedPlugin.value
+    : null,
+);
 const selectedEdgeKey = ref<string | null>(null);
 const pluginById = new Map(plugins.map((plugin) => [plugin.id, plugin]));
 const positionedNodes = nodes.flatMap((node) => {
@@ -84,10 +89,8 @@ function activeSources(sources: string[]) {
 
 function togglePlugin(id: string) {
   const next = new Set(selected.value);
-  if (next.has(id)) {
-    next.delete(id);
-    if (highlightedPlugin.value === id) highlightedPlugin.value = null;
-  } else next.add(id);
+  if (next.has(id)) next.delete(id);
+  else next.add(id);
   selected.value = next;
 }
 
@@ -252,7 +255,7 @@ function onClose() {
                     refY="4"
                     orient="auto"
                   >
-                    <path d="M 0 0 L 8 4 L 0 8 z" fill="currentColor" />
+                    <path d="M 0 0 L 8 4 L 0 8 z" fill="context-stroke" />
                   </marker>
                 </defs>
                 <g class="edges">
@@ -261,7 +264,7 @@ function onClose() {
                     :key="edge.key"
                     class="edge-group"
                     :class="{
-                      highlighted: !!highlightedPlugin && edge.relation.sources.includes(highlightedPlugin),
+                      highlighted: !!activeHighlight && edge.relation.sources.includes(activeHighlight),
                       'relation-selected': activeSelectedEdgeKey === edge.key,
                       'relation-same-kind': selectedEdgeKind === edge.relation.kind && activeSelectedEdgeKey !== edge.key,
                     }"
@@ -287,7 +290,7 @@ function onClose() {
                   class="node-group"
                   :class="{
                     focused: focusedNode === node.kind,
-                    highlighted: !!highlightedPlugin && node.sources.includes(highlightedPlugin),
+                    highlighted: !!activeHighlight && node.sources.includes(activeHighlight),
                     'relation-endpoint': selectedEdgeEndpoints.has(node.kind),
                   }"
                   role="button"
@@ -335,8 +338,9 @@ dialog.explorer-dialog::backdrop { background: rgb(0 0 0 / 65%); }
 dialog.explorer-dialog[open] { display: flex; flex-direction: column; gap: 12px; overflow: auto; }
 .fullscreen-toolbar { display: flex; flex: 0 0 auto; align-items: center; justify-content: space-between; }
 .close-fullscreen { background: var(--vp-c-brand-1); color: white; }
-.schema-workbench { --schema-border: var(--vp-c-divider); --schema-soft: var(--vp-c-bg-soft); --schema-muted: var(--vp-c-text-2); --schema-accent: #6366f1; --schema-accent-strong: #4f46e5; --schema-edge: #778397; --schema-relation-selected: #006d77; --schema-relation-same-kind: #647c9b; display: grid; flex: 1; min-height: 0; grid-template-columns: 230px minmax(0, 1fr); gap: 16px; color: var(--vp-c-text-1); align-items: stretch; }
+.schema-workbench { --schema-border: var(--vp-c-divider); --schema-soft: var(--vp-c-bg-soft); --schema-muted: var(--vp-c-text-2); --schema-accent: #6366f1; --schema-accent-strong: #4f46e5; --schema-edge: #778397; --schema-relation-selected: #006d77; --schema-relation-same-kind: #647c9b; display: grid; flex: 1; min-height: 0; grid-template-columns: 230px minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); gap: 16px; color: var(--vp-c-text-1); align-items: stretch; }
 :global(.dark) .schema-workbench { --schema-accent: #a5b4fc; --schema-accent-strong: #c7d2fe; --schema-edge: #a0aec0; --schema-relation-selected: #4db6bf; --schema-relation-same-kind: #91a8c7; }
+.graph-panel { display: flex; flex-direction: column; min-height: 0; }
 .plugin-panel, .graph-panel { border: 1px solid var(--schema-border); border-radius: 12px; background: var(--vp-c-bg); }
 .plugin-panel { padding: 14px; max-height: 100%; overflow-y: auto; }
 .plugin-panel-heading, .graph-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }

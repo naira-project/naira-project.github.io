@@ -1,12 +1,10 @@
+import type { GraphNode, GraphRelation, Layout, Point } from "./types";
+
 function required<K, V>(map: Map<K, V>, key: K): V {
   const value = map.get(key);
   if (value === undefined) throw new Error(`Missing graph layout value for ${String(key)}`);
   return value;
 }
-
-import type { GraphNode, GraphRelation, Layout, Point } from "./types";
-
-export type { Point } from "./types";
 
 export const NODE_W = 182;
 export const NODE_H = 50;
