@@ -1,131 +1,156 @@
 <script setup lang="ts">
-import { computed, nextTick, ref, watch } from 'vue'
-import { data as pluginGraph } from '../../../plugin-graph.data'
-import { buildGraphModel } from './buildGraphModel'
-import { routeEdges } from './edgeRouting'
-import { computeLayout, NODE_H, NODE_W } from './graphLayout'
-import type { GraphNode, Point } from './graphLayout'
+import { computed, nextTick, ref, watch } from "vue";
+import { data as pluginGraph } from "../../../plugin-graph.data";
+import { buildGraphModel } from "./buildGraphModel";
+import { routeEdges } from "./edgeRouting";
+import type { GraphNode, Point } from "./graphLayout";
+import { computeLayout, NODE_H, NODE_W } from "./graphLayout";
 
-type PlacedNode = GraphNode & Point & { activeSources: string[]; badges: string[]; sourceOverflow: number; sourceLabels: string }
+type PlacedNode = GraphNode &
+  Point & {
+    activeSources: string[];
+    badges: string[];
+    sourceOverflow: number;
+    sourceLabels: string;
+  };
 
-const MIN_ZOOM = 0.4
-const MAX_ZOOM = 2.5
-const ZOOM_STEP = 0.1
-const MAX_BADGES = 4
-const { plugins, groups: pluginGroups, nodes, relations } = buildGraphModel(pluginGraph)
-const layout = computeLayout(nodes, relations)
-const dialog = ref<HTMLDialogElement | null>(null)
-const isOpen = ref(false)
-const zoom = ref(1)
-const selected = ref(new Set(plugins.map(({ id }) => id)))
-const focusedNode = ref<string | null>(null)
-const highlightedPlugin = ref<string | null>(null)
-const selectedEdgeKey = ref<string | null>(null)
-const pluginById = new Map(plugins.map((plugin) => [plugin.id, plugin]))
-const visibleNodes = computed<PlacedNode[]>(() => nodes
-  .filter((node) => node.sources.some((source) => selected.value.has(source)) && layout.positions.has(node.kind))
-  .map((node) => {
-    const activeSources = node.sources.filter((source) => selected.value.has(source))
-    return {
-      ...node,
-      ...layout.positions.get(node.kind)!,
-      activeSources,
-      badges: activeSources.slice(0, MAX_BADGES),
-      sourceOverflow: Math.max(0, activeSources.length - MAX_BADGES),
-      sourceLabels: activeSources.map((id) => pluginById.get(id)?.label ?? id).join(', '),
-    }
-  }))
-const visibleKinds = computed(() => new Set(visibleNodes.value.map((node) => node.kind)))
-const visibleRelations = computed(() => relations.filter((relation) =>
-  relation.sources.some((source) => selected.value.has(source)) &&
-  visibleKinds.value.has(relation.from) && visibleKinds.value.has(relation.to),
-))
-const selectedNodeSources = computed(() => nodes.find((node) => node.kind === focusedNode.value)?.sources.filter((source) => selected.value.has(source)) ?? [])
+const MIN_ZOOM = 0.4;
+const MAX_ZOOM = 2.5;
+const ZOOM_STEP = 0.1;
+const MAX_BADGES = 4;
+const { plugins, groups: pluginGroups, nodes, relations } = buildGraphModel(pluginGraph);
+const layout = computeLayout(nodes, relations);
+const dialog = ref<HTMLDialogElement | null>(null);
+const isOpen = ref(false);
+const zoom = ref(1);
+const selected = ref(new Set(plugins.map(({ id }) => id)));
+const focusedNode = ref<string | null>(null);
+const highlightedPlugin = ref<string | null>(null);
+const selectedEdgeKey = ref<string | null>(null);
+const pluginById = new Map(plugins.map((plugin) => [plugin.id, plugin]));
+const visibleNodes = computed<PlacedNode[]>(() =>
+  nodes
+    .filter(
+      (node) =>
+        node.sources.some((source) => selected.value.has(source)) &&
+        layout.positions.has(node.kind),
+    )
+    .map((node) => {
+      const activeSources = node.sources.filter((source) => selected.value.has(source));
+      return {
+        ...node,
+        ...layout.positions.get(node.kind)!,
+        activeSources,
+        badges: activeSources.slice(0, MAX_BADGES),
+        sourceOverflow: Math.max(0, activeSources.length - MAX_BADGES),
+        sourceLabels: activeSources.map((id) => pluginById.get(id)?.label ?? id).join(", "),
+      };
+    }),
+);
+const visibleKinds = computed(() => new Set(visibleNodes.value.map((node) => node.kind)));
+const visibleRelations = computed(() =>
+  relations.filter(
+    (relation) =>
+      relation.sources.some((source) => selected.value.has(source)) &&
+      visibleKinds.value.has(relation.from) &&
+      visibleKinds.value.has(relation.to),
+  ),
+);
+const selectedNodeSources = computed(
+  () =>
+    nodes
+      .find((node) => node.kind === focusedNode.value)
+      ?.sources.filter((source) => selected.value.has(source)) ?? [],
+);
 
 function zoomGraph(amount: number) {
-  zoom.value = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, Math.round((zoom.value + amount) * 10) / 10))
+  zoom.value = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, Math.round((zoom.value + amount) * 10) / 10));
 }
 
 function activeSources(sources: string[]) {
-  return sources.filter((source) => selected.value.has(source))
+  return sources.filter((source) => selected.value.has(source));
 }
 
 watch(visibleKinds, (kinds) => {
-  if (focusedNode.value && !kinds.has(focusedNode.value)) focusedNode.value = null
-})
+  if (focusedNode.value && !kinds.has(focusedNode.value)) focusedNode.value = null;
+});
 
 function togglePlugin(id: string) {
-  const next = new Set(selected.value)
+  const next = new Set(selected.value);
   if (next.has(id)) {
-    next.delete(id)
-    if (highlightedPlugin.value === id) highlightedPlugin.value = null
-  } else next.add(id)
-  selected.value = next
+    next.delete(id);
+    if (highlightedPlugin.value === id) highlightedPlugin.value = null;
+  } else next.add(id);
+  selected.value = next;
 }
 
 function togglePluginHighlight(id: string) {
-  highlightedPlugin.value = highlightedPlugin.value === id ? null : id
+  highlightedPlugin.value = highlightedPlugin.value === id ? null : id;
 }
 
 function setGroup(group: { id: string; label: string; plugins: string[] }, shouldSelect: boolean) {
-  const next = new Set(selected.value)
+  const next = new Set(selected.value);
   for (const id of group.plugins) {
-    if (shouldSelect) next.add(id)
-    else next.delete(id)
+    if (shouldSelect) next.add(id);
+    else next.delete(id);
   }
-  selected.value = next
+  selected.value = next;
 }
 
 function groupIsFullySelected(group: { plugins: string[] }) {
-  return group.plugins.every((id) => selected.value.has(id))
+  return group.plugins.every((id) => selected.value.has(id));
 }
 
 function toggleAll() {
-  selected.value = selected.value.size === plugins.length ? new Set() : new Set(plugins.map(({ id }) => id))
+  selected.value =
+    selected.value.size === plugins.length ? new Set() : new Set(plugins.map(({ id }) => id));
 }
 
 const visibleEdges = computed(() =>
   routeEdges(visibleRelations.value, visibleNodes.value, layout.positions, layout.routes),
-)
+);
 
 function edgeKey(relation: { kind: string; from: string; to: string }) {
-  return `${relation.kind}-${relation.from}-${relation.to}`
+  return `${relation.kind}-${relation.from}-${relation.to}`;
 }
 
 const selectedEdge = computed(() =>
   visibleEdges.value.find((edge) => edgeKey(edge.relation) === selectedEdgeKey.value),
-)
-const selectedEdgeKind = computed(() => selectedEdge.value?.relation.kind ?? null)
-const selectedEdgeEndpoints = computed(() => new Set(
-  selectedEdge.value ? [selectedEdge.value.relation.from, selectedEdge.value.relation.to] : [],
-))
+);
+const selectedEdgeKind = computed(() => selectedEdge.value?.relation.kind ?? null);
+const selectedEdgeEndpoints = computed(
+  () =>
+    new Set(
+      selectedEdge.value ? [selectedEdge.value.relation.from, selectedEdge.value.relation.to] : [],
+    ),
+);
 
 // Selected edges are painted last so they stay on top of overlapping edges.
 const renderedEdges = computed(() => {
   const rank = (edge: (typeof visibleEdges.value)[number]) => {
-    if (edgeKey(edge.relation) === selectedEdgeKey.value) return 2
-    return edge.relation.kind === selectedEdgeKind.value ? 1 : 0
-  }
-  return [...visibleEdges.value].sort((a, b) => rank(a) - rank(b))
-})
+    if (edgeKey(edge.relation) === selectedEdgeKey.value) return 2;
+    return edge.relation.kind === selectedEdgeKind.value ? 1 : 0;
+  };
+  return [...visibleEdges.value].sort((a, b) => rank(a) - rank(b));
+});
 
 watch(selectedEdgeKind, (kind) => {
-  if (kind === null) selectedEdgeKey.value = null
-})
+  if (kind === null) selectedEdgeKey.value = null;
+});
 
 function toggleEdgeSelection(relation: { kind: string; from: string; to: string }) {
-  const key = edgeKey(relation)
-  selectedEdgeKey.value = selectedEdgeKey.value === key ? null : key
+  const key = edgeKey(relation);
+  selectedEdgeKey.value = selectedEdgeKey.value === key ? null : key;
 }
 
 async function openFullscreen() {
-  isOpen.value = true
-  await nextTick()
-  dialog.value?.showModal()
+  isOpen.value = true;
+  await nextTick();
+  dialog.value?.showModal();
 }
 
 function onClose() {
-  isOpen.value = false
+  isOpen.value = false;
 }
 </script>
 
