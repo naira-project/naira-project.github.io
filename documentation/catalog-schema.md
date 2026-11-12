@@ -14,7 +14,7 @@ The catalog stores what plugins discover as a graph of **nodes** connected by **
 
 ## Data source
 
-The graph is built from [`plugin-graph.yaml`](https://github.com/naira-project/naira/blob/nodes-index/plugins/plugin-graph.yaml), and is fetched when this site is built. To add a plugin or a kind, update that file.
+The graph is built from [`plugin-graph.yaml`](https://github.com/naira-project/naira/blob/main/plugins/plugin-graph.yaml), and is fetched when this site is built. To add a plugin or a kind, update that file.
 
 ## Related sources
 

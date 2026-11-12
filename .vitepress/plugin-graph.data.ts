@@ -1,7 +1,7 @@
 import { defineLoader } from 'vitepress'
 import { parse } from 'yaml'
 
-const PLUGIN_GRAPH_URL = 'https://raw.githubusercontent.com/naira-project/naira/nodes-index/plugins/plugin-graph.yaml'
+const PLUGIN_GRAPH_URL = 'https://raw.githubusercontent.com/naira-project/naira/main/plugins/plugin-graph.yaml'
 
 type RawRelation = { kind: string; from: string; to: string }
 type RawPlugin = { plugin: string; nodes: string[]; relations: RawRelation[] }
