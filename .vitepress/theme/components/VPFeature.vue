@@ -25,37 +25,37 @@ SOFTWARE.
 Copied and adapted from -> https://github.com/vuejs/vitepress/blob/2342269486e82b9b3f692976892f77b0792268ee/src/client/theme-default/components/VPFeature.vue
 */
 
-import { ref } from 'vue'
-import type { DefaultTheme } from 'vitepress/theme'
-import VPImage from 'vitepress/dist/client/theme-default/components/VPImage.vue'
-import VPLink from 'vitepress/dist/client/theme-default/components/VPLink.vue'
+import VPImage from "vitepress/dist/client/theme-default/components/VPImage.vue";
+import VPLink from "vitepress/dist/client/theme-default/components/VPLink.vue";
+import type { DefaultTheme } from "vitepress/theme";
+import { ref } from "vue";
 
-const glowX = ref(0)
-const glowY = ref(0)
-const showGlow = ref(false)
-const featureRef = ref<HTMLElement | null>(null)
+const glowX = ref(0);
+const glowY = ref(0);
+const showGlow = ref(false);
+const featureRef = ref<HTMLElement | null>(null);
 
 defineProps<{
-  icon?: DefaultTheme.FeatureIcon
-  title: string
-  details?: string
-  link?: string
-  linkText?: string
-  rel?: string
-  target?: string
-}>()
+  icon?: DefaultTheme.FeatureIcon;
+  title: string;
+  details?: string;
+  link?: string;
+  linkText?: string;
+  rel?: string;
+  target?: string;
+}>();
 
 function handleMouseMove(e: MouseEvent) {
-  const rect = featureRef.value?.getBoundingClientRect()
-  if (!rect) return
-  glowX.value = e.clientX - rect.left
-  glowY.value = e.clientY - rect.top
+  const rect = featureRef.value?.getBoundingClientRect();
+  if (!rect) return;
+  glowX.value = e.clientX - rect.left;
+  glowY.value = e.clientY - rect.top;
 }
 function handleMouseEnter() {
-  showGlow.value = true
+  showGlow.value = true;
 }
 function handleMouseLeave() {
-  showGlow.value = false
+  showGlow.value = false;
 }
 </script>
 

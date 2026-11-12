@@ -1,4 +1,4 @@
-import { readFileSync, readdirSync, existsSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { fileURLToPath, URL } from "node:url";
 
 export interface PostMeta {
@@ -21,9 +21,12 @@ function parseFrontmatter(raw: string): Record<string, unknown> {
   let listKey: string | null = null;
   let listValues: string[] | null = null;
   for (const line of lines) {
-    if (listKey && /^\s+-\s+/.test(line)) {
-      const v = line.replace(/^\s+-\s+/, "").trim().replace(/^["']|["']$/g, "");
-      listValues!.push(v);
+    if (listKey && listValues && /^\s+-\s+/.test(line)) {
+      const v = line
+        .replace(/^\s+-\s+/, "")
+        .trim()
+        .replace(/^["']|["']$/g, "");
+      listValues.push(v);
       continue;
     }
     const m = line.match(/^([A-Za-z0-9_-]+):\s*(.*)$/);

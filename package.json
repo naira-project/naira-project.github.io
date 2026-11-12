@@ -2,11 +2,18 @@
   "scripts": {
     "dev": "vitepress dev",
     "build": "vitepress build",
+    "typecheck": "vue-tsc --noEmit",
+    "check": "npm run typecheck && biome check .",
+    "fix": "biome check --write .",
     "preview": "vitepress preview"
   },
   "devDependencies": {
+    "@biomejs/biome": "2.6.6",
+    "@types/node": "^26.6.6",
     "mermaid": "^11.16.1",
+    "typescript": "^6.0.3",
     "vitepress-plugin-mermaid": "^2.0.17",
+    "vue-tsc": "^3.3.14",
     "yaml": "^2.9.1"
   },
   "overrides": {

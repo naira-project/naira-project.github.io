@@ -13,4 +13,4 @@ export default {
     app.component('Pagination', Pagination)
     app.component('SchemaExplorer', SchemaExplorer)
   },
-}
+};

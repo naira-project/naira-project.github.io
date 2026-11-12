@@ -6,33 +6,38 @@ function buildBlogSidebar() {
   const posts = readAllPosts();
   const byYear = new Map<string, { text: string; link: string }[]>();
   for (const post of posts) {
-    if (!byYear.has(post.year)) byYear.set(post.year, []);
-    byYear.get(post.year)!.push({
+    let yearPosts = byYear.get(post.year);
+    if (!yearPosts) {
+      yearPosts = [];
+      byYear.set(post.year, yearPosts);
+    }
+    yearPosts.push({
       text: post.title,
       link: `/blog/posts/${post.slug}`,
     });
   }
-  return [...byYear.keys()]
-    .sort((a, b) => Number(b) - Number(a))
-    .map((year) => ({
+  return [...byYear]
+    .sort(([yearA], [yearB]) => Number(yearB) - Number(yearA))
+    .map(([year, items]) => ({
       text: year,
       collapsed: false,
-      items: byYear.get(year)!,
+      items,
     }));
 }
 
 // https://vitepress.dev/reference/site-config
 export default withMermaid({
   title: "Naira",
-  description: "The open source internal development platform to enable organizations building AI first platforms",
+  description:
+    "The open source internal development platform to enable organizations building AI first platforms",
   head: [["link", { rel: "icon", href: "favicon.ico" }]],
   ignoreDeadLinks: "localhostLinks",
   cleanUrls: true,
   base:
-    "DOCS_VERSION" in process.env && process.env.DOCS_VERSION != ""
-      ? "/" + process.env.DOCS_VERSION + "/"
-      : "PAGES_BASE" in process.env && process.env.PAGES_BASE != ""
-        ? "/" + process.env.PAGES_BASE + "/"
+    "DOCS_VERSION" in process.env && process.env.DOCS_VERSION !== ""
+      ? `/${process.env.DOCS_VERSION}/`
+      : "PAGES_BASE" in process.env && process.env.PAGES_BASE !== ""
+        ? `/${process.env.PAGES_BASE}/`
         : "/",
 
   srcExclude: ["**/README.md", "**/CONTRIBUTING.md"],
@@ -51,15 +56,11 @@ export default withMermaid({
       alias: [
         {
           find: /^.*\/VPFooter\.vue$/,
-          replacement: fileURLToPath(
-            new URL("theme/components/VPFooter.vue", import.meta.url),
-          ),
+          replacement: fileURLToPath(new URL("theme/components/VPFooter.vue", import.meta.url)),
         },
         {
           find: /^.*\/VPFeature\.vue$/,
-          replacement: fileURLToPath(
-            new URL("theme/components/VPFeature.vue", import.meta.url),
-          ),
+          replacement: fileURLToPath(new URL("theme/components/VPFeature.vue", import.meta.url)),
         },
       ],
     },
