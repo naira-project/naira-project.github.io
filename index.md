@@ -12,7 +12,7 @@ hero:
   actions:
     - theme: brand
       text: Get Started
-      link: /documentation/
+      link: /documentation/getting-started
     - theme: alt
       text: GitHub
       link: https://github.com/naira-project
@@ -20,16 +20,16 @@ hero:
 features:
   - title: Discover and manage AI assets
     details: One place to find them all, connected and set in context, from the model to the application.
-    link: /documentation/
+    link: /documentation/concepts
   - title: Build AI-native Environments
-    details: For platform engineers that face the challenge of build environments for AI and regular workload, to effectively handle the diverse workload and provide a holistic view of the systems.
-    link: /documentation/
+    details: For platform engineers that face the challenge of building environments for AI and regular workloads, to effectively handle the diverse workload and provide a holistic view of the systems.
+    link: /documentation/deployment
   - title: Accelerate delivery
-    details: Supporting a streamlined and fast delivery of AI projects by golden paths, reuseable templates and an open adjustable ecosystem.
-    link: /documentation/
+    details: Supporting a streamlined and fast delivery of AI projects by golden paths, reusable templates and an open, adjustable plugin ecosystem.
+    link: /documentation/plugins
   - title: AI Engineering and Developer Experience
     details: An intuitive, developer-friendly environment designed to make building AI-enabled systems faster, smoother, and more enjoyable.
-    link: /documentation/
+    link: /documentation/portal
     
 
 ---
