@@ -1,4 +1,34 @@
+import { pairKey } from "./keys";
 import type { GraphNode, GraphRelation, Layout, Point } from "./types";
+
+export const NODE_W = 182;
+export const NODE_H = 50;
+export const HALF_W = NODE_W / 2;
+export const HALF_H = NODE_H / 2;
+export const MIN_WIDTH = 400;
+export const MIN_HEIGHT = 300;
+const COL_GAP = 350; // Distance between column centers.
+const LANE_SEP = 30; // Minimum vertical spacing between items in a column.
+const VIRTUAL_H = 14; // Virtual node height used to reserve an edge lane.
+const PAD = 40;
+const DFS_VISITING = 1;
+const DFS_DONE = 2;
+
+type Edge = [from: string, to: string];
+type VirtualGraph = {
+  ids: string[];
+  sizeOf: Map<string, number>;
+  links: Edge[];
+  chains: Map<string, string[]>;
+};
+type OrderedGraph = {
+  ids: string[];
+  sizeOf: Map<string, number>;
+  layerOf: Map<string, number>;
+  neighbors: Map<string, string[]>;
+  columns: string[][];
+  chains: Map<string, string[]>;
+};
 
 function required<K, V>(map: Map<K, V>, key: K): V {
   const value = map.get(key);
@@ -6,30 +36,11 @@ function required<K, V>(map: Map<K, V>, key: K): V {
   return value;
 }
 
-export const NODE_W = 182;
-export const NODE_H = 50;
-export const HALF_W = NODE_W / 2;
-export const pairKey = (from: string, to: string) => `${from}\u0000${to}`;
-const COL_GAP = 350; // Distance between column centers.
-const LANE_SEP = 30; // Minimum vertical spacing between items in a column.
-const VIRTUAL_H = 14; // Virtual node height used to reserve an edge lane.
-const PAD = 40;
-
-/**
- * Computes a deterministic layered layout using a lightweight Sugiyama approach.
- * DFS omits back edges to break cycles; virtual nodes route long edges, and barycenter
- * sweeps reduce crossings. The complete graph is laid out so plugin filtering does not
- * move nodes.
- */
-export function computeLayout(nodeList: GraphNode[], relationList: GraphRelation[]): Layout {
-  const kinds = Array.from(new Set(nodeList.map((node) => node.kind))).sort();
+function acyclicEdges(kinds: string[], relations: GraphRelation[]): Edge[] {
   const known = new Set(kinds);
-  if (!kinds.length) return { positions: new Map(), routes: new Map(), width: 400, height: 300 };
-
-  // Keep only unique edges with known endpoints; self-loops are not used for layout.
   const seen = new Set<string>();
-  const edges: [string, string][] = [];
-  for (const relation of relationList) {
+  const edges: Edge[] = [];
+  for (const relation of relations) {
     if (relation.from === relation.to || !known.has(relation.from) || !known.has(relation.to))
       continue;
     const key = pairKey(relation.from, relation.to);
@@ -38,7 +49,6 @@ export function computeLayout(nodeList: GraphNode[], relationList: GraphRelation
     edges.push([relation.from, relation.to]);
   }
 
-  // Omit DFS back edges to produce an acyclic graph for layer assignment.
   const outgoing = new Map(kinds.map((kind) => [kind, [] as string[]]));
   const hasIncomingRaw = new Set<string>();
   for (const [from, to] of edges) {
@@ -49,20 +59,22 @@ export function computeLayout(nodeList: GraphNode[], relationList: GraphRelation
     ...kinds.filter((kind) => !hasIncomingRaw.has(kind)),
     ...kinds.filter((kind) => hasIncomingRaw.has(kind)),
   ];
-  const state = new Map<string, 1 | 2>();
-  const dag: [string, string][] = [];
+  const state = new Map<string, number>();
+  const dag: Edge[] = [];
   const visit = (kind: string) => {
-    state.set(kind, 1);
+    state.set(kind, DFS_VISITING);
     for (const target of required(outgoing, kind).slice().sort()) {
-      if (state.get(target) === 1) continue; // Ignore back edges when calculating the layout.
+      if (state.get(target) === DFS_VISITING) continue;
       dag.push([kind, target]);
-      if (!state.get(target)) visit(target);
+      if (!state.has(target)) visit(target);
     }
-    state.set(kind, 2);
+    state.set(kind, DFS_DONE);
   };
-  for (const kind of roots) if (!state.get(kind)) visit(kind);
+  for (const kind of roots) if (!state.has(kind)) visit(kind);
+  return dag;
+}
 
-  // Assign each node to the layer of its longest path from a source.
+function assignLayers(kinds: string[], dag: Edge[]): Map<string, number> {
   const layerOf = new Map(kinds.map((kind) => [kind, 0]));
   for (let pass = 0; pass < kinds.length; pass++) {
     let changed = false;
@@ -76,17 +88,24 @@ export function computeLayout(nodeList: GraphNode[], relationList: GraphRelation
     }
     if (!changed) break;
   }
+
   const hasIncoming = new Set(dag.map(([, to]) => to));
   for (const kind of kinds) {
     if (hasIncoming.has(kind)) continue;
     const successors = dag.filter(([from]) => from === kind).map(([, to]) => required(layerOf, to));
     if (successors.length) layerOf.set(kind, Math.min(...successors) - 1);
   }
+  return layerOf;
+}
 
-  // Add virtual nodes to route edges that span multiple columns.
+function insertVirtualNodes(
+  kinds: string[],
+  dag: Edge[],
+  layerOf: Map<string, number>,
+): VirtualGraph {
   const ids = [...kinds];
   const sizeOf = new Map<string, number>(kinds.map((kind) => [kind, NODE_H]));
-  const links: [string, string][] = [];
+  const links: Edge[] = [];
   const chains = new Map<string, string[]>();
   for (const [from, to] of dag) {
     const fromLayer = required(layerOf, from);
@@ -105,7 +124,15 @@ export function computeLayout(nodeList: GraphNode[], relationList: GraphRelation
     links.push([previous, to]);
     chains.set(pairKey(from, to), chain);
   }
+  return { ids, sizeOf, links, chains };
+}
 
+function orderColumns(
+  kinds: string[],
+  layerOf: Map<string, number>,
+  virtual: VirtualGraph,
+): OrderedGraph {
+  const { ids, sizeOf, links, chains } = virtual;
   const connected = new Set<string>();
   const neighbors = new Map(ids.map((id) => [id, [] as string[]]));
   for (const [a, b] of links) {
@@ -123,10 +150,8 @@ export function computeLayout(nodeList: GraphNode[], relationList: GraphRelation
     if (!column) throw new Error(`Missing graph layout column for ${id}`);
     column.push(id);
   }
-  // Place isolated nodes at the bottom of the first column.
   const isolated = kinds.filter((kind) => !connected.has(kind));
 
-  // Order nodes in each column using the barycenter heuristic.
   const rank = new Map<string, number>();
   const refreshRanks = (column: string[]) => {
     column.forEach((id, index) => {
@@ -160,12 +185,18 @@ export function computeLayout(nodeList: GraphNode[], relationList: GraphRelation
   };
   const indices = columns.map((_, index) => index);
   for (let iteration = 0; iteration < 10; iteration++) {
-    sweep(indices.slice(1), -1); // Order against neighbors in the previous columns.
-    sweep(indices.slice(0, -1).reverse(), 1); // Order against neighbors in the following columns.
+    sweep(indices.slice(1), -1);
+    sweep(indices.slice(0, -1).reverse(), 1);
   }
   columns[0].push(...isolated);
+  return { ids, sizeOf, layerOf, neighbors, columns, chains };
+}
 
-  // Position nodes vertically near the average position of their neighbors.
+function assignY(
+  columns: string[][],
+  sizeOf: Map<string, number>,
+  neighbors: Map<string, string[]>,
+) {
   const gap = (a: string, b: string) => (required(sizeOf, a) + required(sizeOf, b)) / 2 + LANE_SEP;
   const y = new Map<string, number>();
   columns.forEach((column) => {
@@ -194,12 +225,30 @@ export function computeLayout(nodeList: GraphNode[], relationList: GraphRelation
     columns.forEach(place);
     columns.slice().reverse().forEach(place);
   }
+  return y;
+}
+
+/**
+ * Computes a deterministic layered layout using a lightweight Sugiyama approach.
+ * The complete graph is laid out so plugin filtering does not move nodes.
+ */
+export function computeLayout(nodeList: GraphNode[], relationList: GraphRelation[]): Layout {
+  const kinds = Array.from(new Set(nodeList.map((node) => node.kind))).sort();
+  if (!kinds.length) {
+    return { positions: new Map(), routes: new Map(), width: MIN_WIDTH, height: MIN_HEIGHT };
+  }
+
+  const dag = acyclicEdges(kinds, relationList);
+  const layerOf = assignLayers(kinds, dag);
+  const virtual = insertVirtualNodes(kinds, dag, layerOf);
+  const ordered = orderColumns(kinds, layerOf, virtual);
+  const y = assignY(ordered.columns, ordered.sizeOf, ordered.neighbors);
 
   let top = Infinity;
   let bottom = -Infinity;
-  for (const id of ids) {
+  for (const id of ordered.ids) {
     const nodeY = required(y, id);
-    const nodeHeight = required(sizeOf, id);
+    const nodeHeight = required(ordered.sizeOf, id);
     top = Math.min(top, nodeY - nodeHeight / 2);
     bottom = Math.max(bottom, nodeY + nodeHeight / 2);
   }
@@ -208,16 +257,16 @@ export function computeLayout(nodeList: GraphNode[], relationList: GraphRelation
     x: PAD + HALF_W + required(layerOf, id) * COL_GAP,
     y: required(y, id) + offsetY,
   });
-
   const positions = new Map<string, Point>(kinds.map((kind) => [kind, point(kind)]));
   const routes = new Map<string, Point[]>();
-  chains.forEach((chain, key) => {
+  ordered.chains.forEach((chain, key) => {
     routes.set(key, chain.map(point));
   });
+
   return {
     positions,
     routes,
-    width: PAD * 2 + NODE_W + (layerCount - 1) * COL_GAP,
-    height: Math.max(300, bottom + offsetY + PAD),
+    width: PAD * 2 + NODE_W + (ordered.columns.length - 1) * COL_GAP,
+    height: Math.max(MIN_HEIGHT, bottom + offsetY + PAD),
   };
 }

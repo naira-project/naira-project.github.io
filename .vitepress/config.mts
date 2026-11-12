@@ -48,6 +48,7 @@ export default withMermaid({
       target: "esnext",
     },
     optimizeDeps: {
+      include: ["fastdom", "fastdom/extensions/fastdom-promised.js"],
       esbuildOptions: {
         target: "esnext",
       },

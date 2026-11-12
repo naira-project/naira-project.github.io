@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { computed, nextTick, ref } from "vue";
+import { computed, nextTick, ref, watch } from "vue";
 import { data as pluginGraph } from "../../../plugin-graph.data";
 import { buildGraphModel } from "./buildGraphModel";
 import { routeEdges } from "./edgeRouting";
 import { computeLayout, NODE_H, NODE_W } from "./graphLayout";
-import type { GraphNode, Point } from "./types";
+import type { GraphNode, PluginGroup, Point } from "./types";
 
 type PlacedNode = GraphNode &
   Point & {
@@ -24,13 +24,18 @@ const dialog = ref<HTMLDialogElement | null>(null);
 const isOpen = ref(false);
 const zoom = ref(1);
 const selected = ref(new Set(plugins.map(({ id }) => id)));
-const focusedNodeSelection = ref<string | null>(null);
+const focusedKindRaw = ref<string | null>(null);
 const highlightedPlugin = ref<string | null>(null);
 const activeHighlight = computed(() =>
   highlightedPlugin.value && selected.value.has(highlightedPlugin.value)
     ? highlightedPlugin.value
     : null,
 );
+watch(selected, (selection) => {
+  if (highlightedPlugin.value && !selection.has(highlightedPlugin.value)) {
+    highlightedPlugin.value = null;
+  }
+});
 const selectedEdgeKey = ref<string | null>(null);
 const pluginById = new Map(plugins.map((plugin) => [plugin.id, plugin]));
 const positionedNodes = nodes.flatMap((node) => {
@@ -69,13 +74,13 @@ const visibleRelations = computed(() =>
       visibleKinds.value.has(relation.to),
   ),
 );
-const focusedNode = computed(() =>
-  visibleKinds.value.has(focusedNodeSelection.value ?? "") ? focusedNodeSelection.value : null,
+const focusedKind = computed(() =>
+  visibleKinds.value.has(focusedKindRaw.value ?? "") ? focusedKindRaw.value : null,
 );
 const selectedNodeSources = computed(
   () =>
     nodes
-      .find((node) => node.kind === focusedNode.value)
+      .find((node) => node.kind === focusedKind.value)
       ?.sources.filter((source) => selected.value.has(source)) ?? [],
 );
 
@@ -98,7 +103,8 @@ function togglePluginHighlight(id: string) {
   highlightedPlugin.value = highlightedPlugin.value === id ? null : id;
 }
 
-function setGroup(group: { id: string; label: string; plugins: string[] }, shouldSelect: boolean) {
+function toggleGroup(group: PluginGroup) {
+  const shouldSelect = !groupIsFullySelected(group);
   const next = new Set(selected.value);
   for (const id of group.plugins) {
     if (shouldSelect) next.add(id);
@@ -107,7 +113,7 @@ function setGroup(group: { id: string; label: string; plugins: string[] }, shoul
   selected.value = next;
 }
 
-function groupIsFullySelected(group: { plugins: string[] }) {
+function groupIsFullySelected(group: PluginGroup) {
   return group.plugins.every((id) => selected.value.has(id));
 }
 
@@ -146,7 +152,7 @@ function toggleEdgeSelection(key: string) {
 }
 
 function toggleNodeFocus(kind: string) {
-  focusedNodeSelection.value = focusedNode.value === kind ? null : kind;
+  focusedKindRaw.value = focusedKind.value === kind ? null : kind;
 }
 
 function onSvgKeydown(event: KeyboardEvent, action: () => void) {
@@ -181,7 +187,7 @@ function onClose() {
     >
       <template v-if="isOpen">
         <div class="fullscreen-toolbar">
-          <strong>Catalog schema</strong>
+          <strong>Catalog Schema</strong>
           <button class="close-fullscreen" type="button" aria-label="Close full-screen graph" @click="dialog?.close()">Close ×</button>
         </div>
         <section class="schema-workbench" aria-label="Interactive catalog schema explorer">
@@ -193,7 +199,7 @@ function onClose() {
             <section v-for="group in pluginGroups" :key="group.id" class="plugin-group">
               <header class="plugin-group-heading">
                 <strong>{{ group.label }}</strong>
-                <button class="group-select" type="button" @click="setGroup(group, !groupIsFullySelected(group))">{{ groupIsFullySelected(group) ? 'Clear' : 'Select all' }}</button>
+                <button class="group-select" type="button" @click="toggleGroup(group)">{{ groupIsFullySelected(group) ? 'Clear' : 'Select all' }}</button>
               </header>
               <div v-for="id in group.plugins" :key="id" class="plugin-option" :class="{ selected: selected.has(id) }">
                 <label class="plugin-checkbox">
@@ -202,15 +208,15 @@ function onClose() {
                 </label>
                 <button
                   class="plugin-highlight"
-                  :class="{ active: highlightedPlugin === id }"
+                  :class="{ active: activeHighlight === id }"
                   type="button"
-                  :aria-label="`${highlightedPlugin === id ? 'Stop highlighting' : 'Highlight'} ${pluginById.get(id)?.label} nodes and relations`"
-                  :aria-pressed="highlightedPlugin === id"
-                  :title="`${highlightedPlugin === id ? 'Stop highlighting' : 'Highlight'} nodes and relations from ${pluginById.get(id)?.label}`"
+                  :aria-label="`${activeHighlight === id ? 'Stop highlighting' : 'Highlight'} ${pluginById.get(id)?.label} nodes and relations`"
+                  :aria-pressed="activeHighlight === id"
+                  :title="`${activeHighlight === id ? 'Stop highlighting' : 'Highlight'} nodes and relations from ${pluginById.get(id)?.label}`"
                   :disabled="!selected.has(id)"
                   @click="togglePluginHighlight(id)"
                 >
-                  {{ highlightedPlugin === id ? '●' : '○' }}
+                  {{ activeHighlight === id ? '●' : '○' }}
                 </button>
               </div>
             </section>
@@ -289,13 +295,14 @@ function onClose() {
                   :key="node.kind"
                   class="node-group"
                   :class="{
-                    focused: focusedNode === node.kind,
+                    focused: focusedKind === node.kind,
                     highlighted: !!activeHighlight && node.sources.includes(activeHighlight),
                     'relation-endpoint': selectedEdgeEndpoints.has(node.kind),
                   }"
                   role="button"
                   tabindex="0"
                   :aria-label="`${node.kind}, provided by ${node.sourceLabels}`"
+                  :aria-pressed="focusedKind === node.kind"
                   @click="toggleNodeFocus(node.kind)"
                   @keydown="onSvgKeydown($event, () => toggleNodeFocus(node.kind))"
                 >
@@ -317,10 +324,12 @@ function onClose() {
               </svg>
             </div>
             <div v-else class="empty-graph">Select one or more plugins to display their node kinds and relations.</div>
-            <div v-if="focusedNode" class="node-inspector" aria-live="polite">
-              <strong>{{ focusedNode }}</strong><span>Contributed by:</span>
-              <span v-for="source in selectedNodeSources" :key="source" class="inspector-plugin">{{ pluginById.get(source)?.label ?? source }}</span>
-              <span v-if="selectedNodeSources.length > 1" class="shared-label">Shared node kind</span>
+            <div class="node-inspector" aria-live="polite">
+              <template v-if="focusedKind">
+                <strong>{{ focusedKind }}</strong><span>Contributed by:</span>
+                <span v-for="source in selectedNodeSources" :key="source" class="inspector-plugin">{{ pluginById.get(source)?.label ?? source }}</span>
+                <span v-if="selectedNodeSources.length > 1" class="shared-label">Shared node kind</span>
+              </template>
             </div>
           </div>
         </section>
@@ -338,8 +347,8 @@ dialog.explorer-dialog::backdrop { background: rgb(0 0 0 / 65%); }
 dialog.explorer-dialog[open] { display: flex; flex-direction: column; gap: 12px; overflow: auto; }
 .fullscreen-toolbar { display: flex; flex: 0 0 auto; align-items: center; justify-content: space-between; }
 .close-fullscreen { background: var(--vp-c-brand-1); color: white; }
-.schema-workbench { --schema-border: var(--vp-c-divider); --schema-soft: var(--vp-c-bg-soft); --schema-muted: var(--vp-c-text-2); --schema-accent: #6366f1; --schema-accent-strong: #4f46e5; --schema-edge: #778397; --schema-relation-selected: #006d77; --schema-relation-same-kind: #647c9b; display: grid; flex: 1; min-height: 0; grid-template-columns: 230px minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); gap: 16px; color: var(--vp-c-text-1); align-items: stretch; }
-:global(.dark) .schema-workbench { --schema-accent: #a5b4fc; --schema-accent-strong: #c7d2fe; --schema-edge: #a0aec0; --schema-relation-selected: #4db6bf; --schema-relation-same-kind: #91a8c7; }
+.schema-workbench { --schema-graph-min-height: 580px; --schema-border: var(--vp-c-divider); --schema-soft: var(--vp-c-bg-soft); --schema-muted: var(--vp-c-text-2); --schema-accent: var(--vp-c-indigo-1); --schema-accent-strong: var(--vp-c-indigo-2); --schema-edge: #778397; --schema-relation-selected: #006d77; --schema-relation-same-kind: #647c9b; display: grid; flex: 1; min-height: 0; grid-template-columns: 230px minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); gap: 16px; color: var(--vp-c-text-1); align-items: stretch; }
+:global(.dark) .schema-workbench { --schema-accent: var(--vp-c-indigo-2); --schema-accent-strong: var(--vp-c-indigo-1); --schema-edge: #a0aec0; --schema-relation-selected: #4db6bf; --schema-relation-same-kind: #91a8c7; }
 .graph-panel { display: flex; flex-direction: column; min-height: 0; }
 .plugin-panel, .graph-panel { border: 1px solid var(--schema-border); border-radius: 12px; background: var(--vp-c-bg); }
 .plugin-panel { padding: 14px; max-height: 100%; overflow-y: auto; }
@@ -361,7 +370,9 @@ dialog.explorer-dialog[open] { display: flex; flex-direction: column; gap: 12px;
 .plugin-checkbox { display: flex; min-width: 0; align-items: center; gap: 7px; cursor: pointer; }
 .plugin-option input { accent-color: var(--vp-c-brand-1); flex: 0 0 auto; }
 .plugin-label { overflow-wrap: anywhere; font: 600 .72rem var(--vp-font-family-mono); }
-.plugin-highlight { flex: 0 0 auto; border: 0; padding: 0 2px; color: var(--schema-muted); cursor: pointer; font-size: .82rem; line-height: 1; }
+.plugin-highlight { flex: 0 0 auto; border: 0; padding: 0 2px; background: transparent; color: var(--schema-muted); cursor: pointer; font-size: .82rem; line-height: 1; }
+.plugin-highlight:focus-visible { outline: 2px solid var(--vp-c-brand-1); outline-offset: 2px; border-radius: 3px; }
+.plugin-highlight:disabled { cursor: not-allowed; opacity: .45; }
 .plugin-highlight:hover, .plugin-highlight.active { color: var(--schema-accent); }
 .plugin-code-legend { margin-top: 10px; color: var(--schema-muted); font-size: .7rem; }
 .plugin-code-legend summary { cursor: pointer; }
@@ -395,13 +406,13 @@ dialog.explorer-dialog[open] { display: flex; flex-direction: column; gap: 12px;
 .node-group rect { fill: var(--vp-c-bg); stroke: var(--vp-c-divider); stroke-width: 1.5; filter: drop-shadow(0 2px 2px rgb(0 0 0 / 8%)); transition: stroke .15s ease, fill .15s ease; }
 .node-group:hover rect, .node-group:focus rect { stroke: var(--vp-c-brand-1); }
 .node-group.focused rect, .node-group:focus-visible rect { stroke: var(--vp-c-brand-1); stroke-width: 3; }
-.node-group.highlighted rect { stroke: var(--schema-accent); stroke-width: 2.8; }
+.node-group.highlighted rect { stroke: var(--schema-accent-strong); stroke-width: 2.8; }
 .node-group.relation-endpoint rect { fill: color-mix(in srgb, var(--schema-relation-selected) 10%, var(--vp-c-bg)); stroke: var(--schema-relation-selected); stroke-width: 3; }
 
 .node-label { fill: var(--vp-c-text-1); text-anchor: middle; font: 700 12px var(--vp-font-family-mono); }
 .node-source-codes rect { fill: var(--vp-c-bg-soft); stroke: var(--vp-c-divider); stroke-width: .8; }
 .node-source-codes text { fill: var(--vp-c-text-2); text-anchor: middle; font: 700 8px var(--vp-font-family-mono); }
-.empty-graph { display: grid; min-height: 580px; place-items: center; padding: 24px; color: var(--schema-muted); text-align: center; }
+.empty-graph { display: grid; min-height: var(--schema-graph-min-height); place-items: center; padding: 24px; color: var(--schema-muted); text-align: center; }
 .node-inspector { display: flex; flex-wrap: wrap; align-items: center; gap: 7px; margin: 10px 14px; padding: 9px 11px; border: 1px solid var(--schema-border); border-radius: 8px; font-size: .75rem; }
 .node-inspector > span:nth-child(2) { color: var(--schema-muted); }
 .inspector-plugin, .shared-label { padding: 3px 6px; border-radius: 5px; background: var(--schema-soft); font: 600 .68rem var(--vp-font-family-mono); }

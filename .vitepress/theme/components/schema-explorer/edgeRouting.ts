@@ -1,4 +1,5 @@
-import { HALF_W, NODE_H, pairKey } from "./graphLayout";
+import { HALF_H, HALF_W } from "./graphLayout";
+import { pairKey, relationKey } from "./keys";
 import type { GraphRelation, Point } from "./types";
 
 export type PositionedNode = { kind: string; x: number; y: number };
@@ -22,7 +23,6 @@ type PreparedEdge = {
   inPort: number;
 };
 
-const HALF_H = NODE_H / 2;
 const RELATION_LANE_GAP = 24;
 const PORT_MAX_OFFSET = 16;
 const PORT_SPREAD = 34;
@@ -131,7 +131,7 @@ export function routeEdges(
         : (routes.get(pairKey(relation.from, relation.to)) ?? null);
     prepared.push({
       relation,
-      key: `${relation.kind}\u0000${relation.from}\u0000${relation.to}`,
+      key: relationKey(relation.kind, relation.from, relation.to),
       from,
       to,
       lane,
@@ -235,31 +235,15 @@ export function routeEdges(
   for (const index of order) {
     const text = built[index].item.relation.kind;
     const halfWidth = text.length * CHAR_W + LABEL_PAD;
-    const firstFraction = LABEL_FRACTIONS[0];
-    const firstPoint = pointAtFraction(samples[index], lengths[index], firstFraction);
-    const firstRect = {
-      x0: firstPoint.x - halfWidth,
-      x1: firstPoint.x + halfWidth,
-      y0: firstPoint.y - LABEL_HEIGHT,
-      y1: firstPoint.y + LABEL_HEIGHT,
-    };
-    let best = { point: firstPoint, rect: firstRect };
-    let bestScore = scoreLabel(firstRect, index, samples, nodeRects, placed);
-    for (const fraction of LABEL_FRACTIONS.slice(1)) {
+    let best: { point: Point; rect: Rect; score: number } | null = null;
+    for (const fraction of LABEL_FRACTIONS) {
       const point = pointAtFraction(samples[index], lengths[index], fraction);
-      const rect = {
-        x0: point.x - halfWidth,
-        x1: point.x + halfWidth,
-        y0: point.y - LABEL_HEIGHT,
-        y1: point.y + LABEL_HEIGHT,
-      };
+      const rect = labelRect(point, halfWidth);
       const score = scoreLabel(rect, index, samples, nodeRects, placed);
-      if (score < bestScore) {
-        best = { point, rect };
-        bestScore = score;
-        if (score === 0) break;
-      }
+      if (!best || score < best.score) best = { point, rect, score };
+      if (best.score === 0) break;
     }
+    if (!best) continue;
     placed.push(best.rect);
     labels[index] = { x: best.point.x, y: best.point.y + LABEL_BASELINE_OFFSET };
   }
@@ -270,6 +254,15 @@ export function routeEdges(
     d: segmentsToPath(segments),
     label: labels[index],
   }));
+}
+
+function labelRect(point: Point, halfWidth: number): Rect {
+  return {
+    x0: point.x - halfWidth,
+    x1: point.x + halfWidth,
+    y0: point.y - LABEL_HEIGHT,
+    y1: point.y + LABEL_HEIGHT,
+  };
 }
 
 function scoreLabel(

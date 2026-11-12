@@ -1,3 +1,4 @@
+import { relationKey } from "./keys";
 import { FALLBACK_GROUP, pluginGroupLabel, pluginPresentation } from "./schemaExplorerPresentation";
 import type {
   GraphModel,
@@ -42,6 +43,7 @@ export function buildGraphModel(pluginGraph: PluginGraphDocument): GraphModel {
     }
     group.plugins.push(plugin.id);
   }
+  // Keep the fallback group after all configured groups.
   const groups = [...groupsById.values()].sort(
     (a, b) => Number(a.id === FALLBACK_GROUP) - Number(b.id === FALLBACK_GROUP),
   );
@@ -62,7 +64,7 @@ export function buildGraphModel(pluginGraph: PluginGraphDocument): GraphModel {
   const relationsByKey = new Map<string, GraphRelation>();
   for (const plugin of pluginGraph.plugins) {
     for (const relation of plugin.relations) {
-      const key = `${relation.kind}\u0000${relation.from}\u0000${relation.to}`;
+      const key = relationKey(relation.kind, relation.from, relation.to);
       let graphRelation = relationsByKey.get(key);
       if (!graphRelation) {
         graphRelation = { ...relation, sources: [] };

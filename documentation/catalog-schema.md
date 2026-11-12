@@ -2,7 +2,7 @@
 import SchemaExplorer from "../.vitepress/theme/components/schema-explorer/SchemaExplorer.vue";
 </script>
 
-# Catalog schema
+# Catalog Schema
 
 The catalog stores what plugins discover as a graph of **nodes** connected by **relations**. This page shows the shape of that graph: which kinds of nodes and relations each plugin can emit. It does not show actual catalog data.
 
