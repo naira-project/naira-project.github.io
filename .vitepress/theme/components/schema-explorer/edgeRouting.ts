@@ -1,5 +1,5 @@
-import type { GraphRelation, Point } from "./graphLayout";
-import { edgeKey, HALF_W, NODE_H } from "./graphLayout";
+import { HALF_W, NODE_H, pairKey } from "./graphLayout";
+import type { GraphRelation, Point } from "./types";
 
 export type PositionedNode = { kind: string; x: number; y: number };
 export type RoutedEdge = {
@@ -16,13 +16,21 @@ type PreparedEdge = {
   key: string;
   from: Point;
   to: Point;
-  lane: { offset: number };
+  lane: number;
   route: Point[] | null;
   outPort: number;
   inPort: number;
 };
 
 const HALF_H = NODE_H / 2;
+const RELATION_LANE_GAP = 24;
+const PORT_MAX_OFFSET = 16;
+const PORT_SPREAD = 34;
+const BACK_EDGE_CONTROL_OFFSET = 95;
+const SELF_LOOP_CONTROL_X = 95;
+const SELF_LOOP_CONTROL_Y = 88;
+const SELF_LOOP_ENDPOINT_Y = 8;
+const LABEL_BASELINE_OFFSET = 4;
 const LABEL_FRACTIONS = [0.5, 0.42, 0.58, 0.34, 0.66, 0.26, 0.74, 0.18, 0.82, 0.12, 0.88];
 const CHAR_W = 3.4;
 const LABEL_PAD = 6;
@@ -32,7 +40,7 @@ const PLACED_LABEL_PAD = 3;
 const OVERLAP_SCORE = 10;
 const EDGE_CROSSING_SCORE = 1;
 const portOffset = (count: number, index: number) =>
-  count <= 1 ? 0 : (index - (count - 1) / 2) * Math.min(16, 34 / (count - 1));
+  count <= 1 ? 0 : (index - (count - 1) / 2) * Math.min(PORT_MAX_OFFSET, PORT_SPREAD / (count - 1));
 const rectsOverlap = (a: Rect, b: Rect, pad = 0) =>
   a.x0 < b.x1 + pad && a.x1 > b.x0 - pad && a.y0 < b.y1 + pad && a.y1 > b.y0 - pad;
 
@@ -96,18 +104,16 @@ export function routeEdges(
 ): RoutedEdge[] {
   const relationGroups = new Map<string, GraphRelation[]>();
   for (const relation of visibleRelations) {
-    const key = edgeKey(relation.from, relation.to);
+    const key = pairKey(relation.from, relation.to);
     const group = relationGroups.get(key) ?? [];
     group.push(relation);
     relationGroups.set(key, group);
   }
 
-  const lanes = new Map<GraphRelation, { offset: number }>();
+  const lanes = new Map<GraphRelation, number>();
   for (const group of relationGroups.values()) {
     group.forEach((relation, index) => {
-      lanes.set(relation, {
-        offset: (index - (group.length - 1) / 2) * 24,
-      });
+      lanes.set(relation, (index - (group.length - 1) / 2) * RELATION_LANE_GAP);
     });
   }
 
@@ -117,18 +123,19 @@ export function routeEdges(
     const to = positions.get(relation.to);
     if (!from || !to) return;
     const lane = lanes.get(relation);
-    if (!lane) return;
+    if (lane === undefined) throw new Error(`Missing edge lane for relation "${relation.kind}"`);
+    // A null route means either a self-loop (routed explicitly below) or a back edge omitted by layout.
     const route =
       relation.from === relation.to
         ? null
-        : (routes.get(edgeKey(relation.from, relation.to)) ?? null);
+        : (routes.get(pairKey(relation.from, relation.to)) ?? null);
     prepared.push({
       relation,
-      key: `${relation.kind}-${relation.from}-${relation.to}`,
+      key: `${relation.kind}\u0000${relation.from}\u0000${relation.to}`,
       from,
       to,
       lane,
-      route: route?.map((point) => ({ x: point.x, y: point.y + lane.offset })) ?? null,
+      route: route?.map((point) => ({ x: point.x, y: point.y + lane })) ?? null,
       outPort: 0,
       inPort: 0,
     });
@@ -176,13 +183,13 @@ export function routeEdges(
       segments = anchors.slice(1).map((anchor, index) => smoothSegment(anchors[index], anchor));
     } else if (item.relation.from === item.relation.to) {
       const x = from.x + HALF_W;
-      const spread = lane.offset;
+      const spread = lane;
       segments = [
         [
-          { x, y: from.y - 8 },
-          { x: x + 95 + spread, y: from.y - 88 },
-          { x: x + 95 + spread, y: from.y + 88 },
-          { x, y: from.y + 8 },
+          { x, y: from.y - SELF_LOOP_ENDPOINT_Y },
+          { x: x + SELF_LOOP_CONTROL_X + spread, y: from.y - SELF_LOOP_CONTROL_Y },
+          { x: x + SELF_LOOP_CONTROL_X + spread, y: from.y + SELF_LOOP_CONTROL_Y },
+          { x, y: from.y + SELF_LOOP_ENDPOINT_Y },
         ],
       ];
     } else if (from.x === to.x) {
@@ -190,7 +197,7 @@ export function routeEdges(
       const startX = from.x + HALF_W;
       const startY = from.y + direction * HALF_H;
       const endY = to.y - direction * HALF_H;
-      const controlX = startX + 95 + lane.offset;
+      const controlX = startX + BACK_EDGE_CONTROL_OFFSET + lane;
       segments = [
         [
           { x: startX, y: startY },
@@ -228,9 +235,17 @@ export function routeEdges(
   for (const index of order) {
     const text = built[index].item.relation.kind;
     const halfWidth = text.length * CHAR_W + LABEL_PAD;
-    let best: { point: Point; rect: Rect } | null = null;
-    let bestScore = Infinity;
-    for (const fraction of LABEL_FRACTIONS) {
+    const firstFraction = LABEL_FRACTIONS[0];
+    const firstPoint = pointAtFraction(samples[index], lengths[index], firstFraction);
+    const firstRect = {
+      x0: firstPoint.x - halfWidth,
+      x1: firstPoint.x + halfWidth,
+      y0: firstPoint.y - LABEL_HEIGHT,
+      y1: firstPoint.y + LABEL_HEIGHT,
+    };
+    let best = { point: firstPoint, rect: firstRect };
+    let bestScore = scoreLabel(firstRect, index, samples, nodeRects, placed);
+    for (const fraction of LABEL_FRACTIONS.slice(1)) {
       const point = pointAtFraction(samples[index], lengths[index], fraction);
       const rect = {
         x0: point.x - halfWidth,
@@ -245,9 +260,8 @@ export function routeEdges(
         if (score === 0) break;
       }
     }
-    if (!best) continue;
     placed.push(best.rect);
-    labels[index] = { x: best.point.x, y: best.point.y + 4 };
+    labels[index] = { x: best.point.x, y: best.point.y + LABEL_BASELINE_OFFSET };
   }
 
   return built.map(({ item, segments }, index) => ({

@@ -4,20 +4,14 @@ function required<K, V>(map: Map<K, V>, key: K): V {
   return value;
 }
 
-export type Point = { x: number; y: number };
-export type GraphNode = { kind: string; sources: string[] };
-export type GraphRelation = { kind: string; from: string; to: string; sources: string[] };
-export type Layout = {
-  positions: Map<string, Point>;
-  routes: Map<string, Point[]>;
-  width: number;
-  height: number;
-};
+import type { GraphNode, GraphRelation, Layout, Point } from "./types";
+
+export type { Point } from "./types";
 
 export const NODE_W = 182;
 export const NODE_H = 50;
 export const HALF_W = NODE_W / 2;
-export const edgeKey = (from: string, to: string) => `${from}\u0000${to}`;
+export const pairKey = (from: string, to: string) => `${from}\u0000${to}`;
 const COL_GAP = 350; // Distance between column centers.
 const LANE_SEP = 30; // Minimum vertical spacing between items in a column.
 const VIRTUAL_H = 14; // Virtual node height used to reserve an edge lane.
@@ -40,7 +34,7 @@ export function computeLayout(nodeList: GraphNode[], relationList: GraphRelation
   for (const relation of relationList) {
     if (relation.from === relation.to || !known.has(relation.from) || !known.has(relation.to))
       continue;
-    const key = edgeKey(relation.from, relation.to);
+    const key = pairKey(relation.from, relation.to);
     if (seen.has(key)) continue;
     seen.add(key);
     edges.push([relation.from, relation.to]);
@@ -111,7 +105,7 @@ export function computeLayout(nodeList: GraphNode[], relationList: GraphRelation
       previous = id;
     }
     links.push([previous, to]);
-    chains.set(edgeKey(from, to), chain);
+    chains.set(pairKey(from, to), chain);
   }
 
   const connected = new Set<string>();

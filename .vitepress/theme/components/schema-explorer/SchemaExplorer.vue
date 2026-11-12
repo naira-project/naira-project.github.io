@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { computed, nextTick, ref, watch } from "vue";
+import { computed, nextTick, ref } from "vue";
 import { data as pluginGraph } from "../../../plugin-graph.data";
 import { buildGraphModel } from "./buildGraphModel";
 import { routeEdges } from "./edgeRouting";
-import type { GraphNode, Point } from "./graphLayout";
 import { computeLayout, NODE_H, NODE_W } from "./graphLayout";
+import type { GraphNode, Point } from "./types";
 
 type PlacedNode = GraphNode &
   Point & {
@@ -24,32 +24,36 @@ const dialog = ref<HTMLDialogElement | null>(null);
 const isOpen = ref(false);
 const zoom = ref(1);
 const selected = ref(new Set(plugins.map(({ id }) => id)));
-const focusedNode = ref<string | null>(null);
+const focusedNodeSelection = ref<string | null>(null);
 const highlightedPlugin = ref<string | null>(null);
 const selectedEdgeKey = ref<string | null>(null);
 const pluginById = new Map(plugins.map((plugin) => [plugin.id, plugin]));
-const visibleNodes = computed<PlacedNode[]>(() =>
-  nodes
-    .filter(
-      (node) =>
-        node.sources.some((source) => selected.value.has(source)) &&
-        layout.positions.has(node.kind),
-    )
-    .flatMap((node) => {
-      const position = layout.positions.get(node.kind);
-      if (!position) return [];
-      const activeSources = node.sources.filter((source) => selected.value.has(source));
-      return [
+const positionedNodes = nodes.flatMap((node) => {
+  const position = layout.positions.get(node.kind);
+  return position
+    ? [
         {
           ...node,
           ...position,
-          activeSources,
-          badges: activeSources.slice(0, MAX_BADGES),
-          sourceOverflow: Math.max(0, activeSources.length - MAX_BADGES),
-          sourceLabels: activeSources.map((id) => pluginById.get(id)?.label ?? id).join(", "),
+          sourceLabels: node.sources.map((id) => pluginById.get(id)?.label ?? id).join(", "),
         },
-      ];
-    }),
+      ]
+    : [];
+});
+const visibleNodes = computed<PlacedNode[]>(() =>
+  positionedNodes.flatMap((node) => {
+    const activeSources = node.sources.filter((source) => selected.value.has(source));
+    return activeSources.length
+      ? [
+          {
+            ...node,
+            activeSources,
+            badges: activeSources.slice(0, MAX_BADGES),
+            sourceOverflow: Math.max(0, activeSources.length - MAX_BADGES),
+          },
+        ]
+      : [];
+  }),
 );
 const visibleKinds = computed(() => new Set(visibleNodes.value.map((node) => node.kind)));
 const visibleRelations = computed(() =>
@@ -59,6 +63,9 @@ const visibleRelations = computed(() =>
       visibleKinds.value.has(relation.from) &&
       visibleKinds.value.has(relation.to),
   ),
+);
+const focusedNode = computed(() =>
+  visibleKinds.value.has(focusedNodeSelection.value ?? "") ? focusedNodeSelection.value : null,
 );
 const selectedNodeSources = computed(
   () =>
@@ -74,10 +81,6 @@ function zoomGraph(amount: number) {
 function activeSources(sources: string[]) {
   return sources.filter((source) => selected.value.has(source));
 }
-
-watch(visibleKinds, (kinds) => {
-  if (focusedNode.value && !kinds.has(focusedNode.value)) focusedNode.value = null;
-});
 
 function togglePlugin(id: string) {
   const next = new Set(selected.value);
@@ -114,13 +117,10 @@ const visibleEdges = computed(() =>
   routeEdges(visibleRelations.value, visibleNodes.value, layout.positions, layout.routes),
 );
 
-function edgeKey(relation: { kind: string; from: string; to: string }) {
-  return `${relation.kind}-${relation.from}-${relation.to}`;
-}
-
-const selectedEdge = computed(() =>
-  visibleEdges.value.find((edge) => edgeKey(edge.relation) === selectedEdgeKey.value),
+const selectedEdge = computed(
+  () => visibleEdges.value.find((edge) => edge.key === selectedEdgeKey.value) ?? null,
 );
+const activeSelectedEdgeKey = computed(() => selectedEdge.value?.key ?? null);
 const selectedEdgeKind = computed(() => selectedEdge.value?.relation.kind ?? null);
 const selectedEdgeEndpoints = computed(
   () =>
@@ -132,19 +132,24 @@ const selectedEdgeEndpoints = computed(
 // Selected edges are painted last so they stay on top of overlapping edges.
 const renderedEdges = computed(() => {
   const rank = (edge: (typeof visibleEdges.value)[number]) => {
-    if (edgeKey(edge.relation) === selectedEdgeKey.value) return 2;
+    if (edge.key === activeSelectedEdgeKey.value) return 2;
     return edge.relation.kind === selectedEdgeKind.value ? 1 : 0;
   };
   return [...visibleEdges.value].sort((a, b) => rank(a) - rank(b));
 });
 
-watch(selectedEdgeKind, (kind) => {
-  if (kind === null) selectedEdgeKey.value = null;
-});
+function toggleEdgeSelection(key: string) {
+  selectedEdgeKey.value = activeSelectedEdgeKey.value === key ? null : key;
+}
 
-function toggleEdgeSelection(relation: { kind: string; from: string; to: string }) {
-  const key = edgeKey(relation);
-  selectedEdgeKey.value = selectedEdgeKey.value === key ? null : key;
+function toggleNodeFocus(kind: string) {
+  focusedNodeSelection.value = focusedNode.value === kind ? null : kind;
+}
+
+function onSvgKeydown(event: KeyboardEvent, action: () => void) {
+  if (event.key !== "Enter" && event.key !== " ") return;
+  event.preventDefault();
+  action();
 }
 
 async function openFullscreen() {
@@ -161,9 +166,16 @@ function onClose() {
 <template>
   <div class="schema-explorer-root">
     <div class="explorer-toolbar">
-      <button class="open-fullscreen" type="button" @click="openFullscreen">Open catalog graph in full screen</button>
+      <button class="open-fullscreen" type="button" @click="openFullscreen">
+        Open catalog graph in full screen
+      </button>
     </div>
-    <dialog ref="dialog" class="explorer-dialog" aria-label="Catalog schema explorer" @close="onClose">
+    <dialog
+      ref="dialog"
+      class="explorer-dialog"
+      aria-label="Catalog schema explorer"
+      @close="onClose"
+    >
       <template v-if="isOpen">
         <div class="fullscreen-toolbar">
           <strong>Catalog schema</strong>
@@ -192,6 +204,7 @@ function onClose() {
                   :aria-label="`${highlightedPlugin === id ? 'Stop highlighting' : 'Highlight'} ${pluginById.get(id)?.label} nodes and relations`"
                   :aria-pressed="highlightedPlugin === id"
                   :title="`${highlightedPlugin === id ? 'Stop highlighting' : 'Highlight'} nodes and relations from ${pluginById.get(id)?.label}`"
+                  :disabled="!selected.has(id)"
                   @click="togglePluginHighlight(id)"
                 >
                   {{ highlightedPlugin === id ? '●' : '○' }}
@@ -226,20 +239,31 @@ function onClose() {
               <svg
                 class="graph-svg"
                 :viewBox="`0 0 ${layout.width} ${layout.height}`"
-                :style="{ width: `${layout.width * zoom}px`, height: `${layout.height * zoom}px`, minHeight: 0 }"
+                :style="{ width: `${layout.width * zoom}px`, height: `${layout.height * zoom}px` }"
                 role="group"
                 aria-label="Node kinds connected by plugin-provided relations"
               >
-                <defs><marker id="schema-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M 0 0 L 8 4 L 0 8 z" fill="context-stroke" /></marker></defs>
+                <defs>
+                  <marker
+                    id="schema-arrow"
+                    markerWidth="8"
+                    markerHeight="8"
+                    refX="7"
+                    refY="4"
+                    orient="auto"
+                  >
+                    <path d="M 0 0 L 8 4 L 0 8 z" fill="currentColor" />
+                  </marker>
+                </defs>
                 <g class="edges">
                   <g
                     v-for="edge in renderedEdges"
-                    :key="edgeKey(edge.relation)"
+                    :key="edge.key"
                     class="edge-group"
                     :class="{
-                      highlighted: highlightedPlugin && edge.relation.sources.includes(highlightedPlugin),
-                      'relation-selected': selectedEdgeKey === edgeKey(edge.relation),
-                      'relation-same-kind': selectedEdgeKind === edge.relation.kind && selectedEdgeKey !== edgeKey(edge.relation),
+                      highlighted: !!highlightedPlugin && edge.relation.sources.includes(highlightedPlugin),
+                      'relation-selected': activeSelectedEdgeKey === edge.key,
+                      'relation-same-kind': selectedEdgeKind === edge.relation.kind && activeSelectedEdgeKey !== edge.key,
                     }"
                   >
                     <path :d="edge.d" marker-end="url(#schema-arrow)" />
@@ -249,11 +273,10 @@ function onClose() {
                       tabindex="0"
                       :x="edge.label.x"
                       :y="edge.label.y"
-                      :aria-pressed="selectedEdgeKey === edgeKey(edge.relation)"
+                      :aria-pressed="activeSelectedEdgeKey === edge.key"
                       :aria-label="`${edge.relation.from} ${edge.relation.kind} ${edge.relation.to}; highlight relations of this kind`"
-                      @click.stop="toggleEdgeSelection(edge.relation)"
-                      @keydown.enter.prevent="toggleEdgeSelection(edge.relation)"
-                      @keydown.space.prevent="toggleEdgeSelection(edge.relation)"
+                      @click.stop="toggleEdgeSelection(edge.key)"
+                      @keydown="onSvgKeydown($event, () => toggleEdgeSelection(edge.key))"
                     >{{ edge.relation.kind }}</text>
                     <title>{{ edge.relation.from }} —{{ edge.relation.kind }}→ {{ edge.relation.to }}; {{ activeSources(edge.relation.sources).map((id) => pluginById.get(id)?.label ?? id).join(', ') }}</title>
                   </g>
@@ -264,15 +287,14 @@ function onClose() {
                   class="node-group"
                   :class="{
                     focused: focusedNode === node.kind,
-                    highlighted: highlightedPlugin && node.sources.includes(highlightedPlugin),
+                    highlighted: !!highlightedPlugin && node.sources.includes(highlightedPlugin),
                     'relation-endpoint': selectedEdgeEndpoints.has(node.kind),
                   }"
                   role="button"
                   tabindex="0"
                   :aria-label="`${node.kind}, provided by ${node.sourceLabels}`"
-                  @click="focusedNode = focusedNode === node.kind ? null : node.kind"
-                  @keydown.enter.prevent="focusedNode = focusedNode === node.kind ? null : node.kind"
-                  @keydown.space.prevent="focusedNode = focusedNode === node.kind ? null : node.kind"
+                  @click="toggleNodeFocus(node.kind)"
+                  @keydown="onSvgKeydown($event, () => toggleNodeFocus(node.kind))"
                 >
                   <rect :x="node.x - NODE_W / 2" :y="node.y - NODE_H / 2" :width="NODE_W" :height="NODE_H" rx="9" />
                   <text class="node-label" :x="node.x" :y="node.y - 3">{{ node.kind }}</text>
@@ -313,11 +335,8 @@ dialog.explorer-dialog::backdrop { background: rgb(0 0 0 / 65%); }
 dialog.explorer-dialog[open] { display: flex; flex-direction: column; gap: 12px; overflow: auto; }
 .fullscreen-toolbar { display: flex; flex: 0 0 auto; align-items: center; justify-content: space-between; }
 .close-fullscreen { background: var(--vp-c-brand-1); color: white; }
-.schema-workbench { --schema-border: var(--vp-c-divider); --schema-soft: var(--vp-c-bg-soft); --schema-muted: var(--vp-c-text-2); --schema-accent: #6366f1; --schema-accent-strong: #4f46e5; --schema-edge: #778397; --schema-relation-selected: #006d77; --schema-relation-same-kind: #647c9b; display: grid; grid-template-columns: 230px minmax(0, 1fr); gap: 16px; color: var(--vp-c-text-1); align-items: start; }
+.schema-workbench { --schema-border: var(--vp-c-divider); --schema-soft: var(--vp-c-bg-soft); --schema-muted: var(--vp-c-text-2); --schema-accent: #6366f1; --schema-accent-strong: #4f46e5; --schema-edge: #778397; --schema-relation-selected: #006d77; --schema-relation-same-kind: #647c9b; display: grid; flex: 1; min-height: 0; grid-template-columns: 230px minmax(0, 1fr); gap: 16px; color: var(--vp-c-text-1); align-items: stretch; }
 :global(.dark) .schema-workbench { --schema-accent: #a5b4fc; --schema-accent-strong: #c7d2fe; --schema-edge: #a0aec0; --schema-relation-selected: #4db6bf; --schema-relation-same-kind: #91a8c7; }
-.schema-workbench { flex: 1; min-height: 0; align-items: stretch; }
-.graph-panel { display: flex; flex-direction: column; min-height: 0; }
-.graph-canvas { flex: 1; max-height: none; min-height: 0; }
 .plugin-panel, .graph-panel { border: 1px solid var(--schema-border); border-radius: 12px; background: var(--vp-c-bg); }
 .plugin-panel { padding: 14px; max-height: 100%; overflow-y: auto; }
 .plugin-panel-heading, .graph-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
@@ -349,28 +368,29 @@ dialog.explorer-dialog[open] { display: flex; flex-direction: column; gap: 12px;
 .legend-edge-selected { border-top: 3px solid var(--schema-relation-selected); }
 .legend-edge-same-kind { border-top: 3px solid var(--schema-relation-same-kind); }
 .panel-footnote { color: var(--schema-muted); font-size: .7rem; line-height: 1.5; margin: 12px 0 0; }
-.graph-panel { min-width: 0; overflow: hidden; }
 .graph-heading { padding: 14px 16px 10px; }
 .graph-heading p { font-size: .8rem; }
-.graph-canvas { max-height: calc(100vh - 225px); min-height: 580px; overflow: auto; background-color: var(--vp-c-bg); background-image: radial-gradient(var(--vp-c-divider) .75px, transparent .75px); background-size: 18px 18px; border-top: 1px solid var(--schema-border); border-bottom: 1px solid var(--schema-border); }
-.graph-svg { display: block; width: 100%; height: auto; min-height: 580px; color: var(--vp-c-text-2); }
-.edge-group path { fill: none; stroke: var(--schema-edge); stroke-width: 1.5; opacity: .7; }
-.edge-group text { fill: var(--vp-c-text-2); stroke: var(--vp-c-bg); stroke-width: 4px; paint-order: stroke; text-anchor: middle; font: 600 11px var(--vp-font-family-mono); }
-.edge-group.highlighted path { stroke: var(--schema-accent); stroke-width: 3.2; opacity: 1; }
-.edge-group.highlighted text { fill: var(--schema-accent-strong); font-weight: 800; }
+.graph-canvas { flex: 1; min-height: 0; overflow: auto; background-color: var(--vp-c-bg); background-image: radial-gradient(var(--vp-c-divider) .75px, transparent .75px); background-size: 18px 18px; border-top: 1px solid var(--schema-border); border-bottom: 1px solid var(--schema-border); }
+.graph-svg { display: block; color: var(--vp-c-text-2); }
+.edge-group { color: var(--schema-edge); }
+.edge-group path { fill: none; stroke: currentColor; stroke-width: 1.5; opacity: .7; }
+.edge-group text { fill: currentColor; stroke: var(--vp-c-bg); stroke-width: 4px; paint-order: stroke; text-anchor: middle; font: 600 11px var(--vp-font-family-mono); }
+.edge-group.highlighted { color: var(--schema-accent-strong); }
+.edge-group.highlighted path { stroke-width: 3.2; opacity: 1; }
+.edge-group.highlighted text { font-weight: 800; }
 .edge-group .edge-label { cursor: pointer; outline: none; }
 .edge-group .edge-label:hover, .edge-group .edge-label:focus-visible { fill: var(--vp-c-brand-1); text-decoration: underline; }
-.edge-group.relation-same-kind path { stroke: var(--schema-relation-same-kind); stroke-width: 3; opacity: 1; }
-.edge-group.relation-same-kind text { fill: var(--schema-relation-same-kind); font-weight: 800; }
-.edge-group.relation-selected path { stroke: var(--schema-relation-selected); stroke-width: 3.6; opacity: 1; }
-.edge-group.relation-selected text { fill: var(--schema-relation-selected); font-weight: 800; }
+.edge-group.relation-same-kind { color: var(--schema-relation-same-kind); }
+.edge-group.relation-same-kind path { stroke-width: 3; opacity: 1; }
+.edge-group.relation-same-kind text { font-weight: 800; }
+.edge-group.relation-selected { color: var(--schema-relation-selected); }
+.edge-group.relation-selected path { stroke-width: 3.6; opacity: 1; }
+.edge-group.relation-selected text { font-weight: 800; }
 
 .node-group { cursor: pointer; outline: none; }
 .node-group rect { fill: var(--vp-c-bg); stroke: var(--vp-c-divider); stroke-width: 1.5; filter: drop-shadow(0 2px 2px rgb(0 0 0 / 8%)); transition: stroke .15s ease, fill .15s ease; }
 .node-group:hover rect, .node-group:focus rect { stroke: var(--vp-c-brand-1); }
-.node-group.focused rect { stroke: var(--vp-c-brand-1); stroke-width: 3; }
-
-.node-group:focus-visible rect { stroke: var(--vp-c-brand-1); stroke-width: 3; }
+.node-group.focused rect, .node-group:focus-visible rect { stroke: var(--vp-c-brand-1); stroke-width: 3; }
 .node-group.highlighted rect { stroke: var(--schema-accent); stroke-width: 2.8; }
 .node-group.relation-endpoint rect { fill: color-mix(in srgb, var(--schema-relation-selected) 10%, var(--vp-c-bg)); stroke: var(--schema-relation-selected); stroke-width: 3; }
 
