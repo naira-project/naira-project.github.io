@@ -48,6 +48,7 @@ export default withMermaid({
       target: "esnext",
     },
     optimizeDeps: {
+      include: ["fastdom", "fastdom/extensions/fastdom-promised.js"],
       esbuildOptions: {
         target: "esnext",
       },
@@ -97,6 +98,7 @@ export default withMermaid({
           items: [
             { text: "Introduction", link: "/documentation/" },
             { text: "Concepts", link: "/documentation/concepts" },
+            { text: "Catalog Schema", link: "/documentation/catalog-schema" },
             { text: "Tech Radar", link: "/documentation/tech-radar" },
             { text: "Contribute", link: "/documentation/contribute" },
             { text: "Community", link: "/documentation/community" },
