@@ -67,7 +67,7 @@ dialog.explorer-dialog[open] {
   color: var(--vp-c-text-1);
   align-items: stretch;
 }
-:global(.dark) .schema-workbench {
+.dark .schema-workbench {
   --schema-accent: var(--vp-c-indigo-2);
   --schema-accent-strong: var(--vp-c-indigo-1);
   --schema-edge: #a0aec0;
@@ -384,12 +384,12 @@ dialog.explorer-dialog[open] {
   text-anchor: middle;
   font: 700 12px var(--vp-font-family-mono);
 }
-.node-source-codes rect {
+.node-group .node-source-codes rect {
   fill: var(--vp-c-bg-soft);
   stroke: var(--vp-c-divider);
   stroke-width: 0.8;
 }
-.node-source-codes text {
+.node-group .node-source-codes text {
   fill: var(--vp-c-text-2);
   text-anchor: middle;
   font: 700 8px var(--vp-font-family-mono);
